@@ -69,12 +69,12 @@ After creating the backend resources, configure your Terraform backend:
 ```hcl
 terraform {
   backend "s3" {
-    bucket         = "myorg-prod-usw2-tfstate-123456789012"
-    key            = "path/to/terraform.tfstate"
-    region         = "us-west-2"
-    encrypt        = true
-    kms_key_id     = "arn:aws:kms:us-west-2:123456789012:key/12345678-1234-1234-1234-123456789012"
-    dynamodb_table = "myorg-prod-usw2-tfstate-123456789012-lock"
+bucket         = "<YOUR_BUCKET_NAME>"
+key            = "path/to/terraform.tfstate"
+region         = "us-west-2"
+encrypt        = true
+kms_key_id     = "<YOUR_KMS_KEY_ARN>"
+dynamodb_table = "<YOUR_DYNAMODB_TABLE_NAME>"
   }
 }
 ```
