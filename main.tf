@@ -11,16 +11,8 @@ resource "aws_s3_bucket" "tfstate" {
   tags = merge(local.common_data_tags, {
     Name = "${local.name_prefix}-tfstate-${local.account_id}"
   })
-}
 
-# S3 Bucket versioning
-resource "aws_s3_bucket_versioning" "tfstate" {
-  count = var.enabled ? 1 : 0
-
-  bucket = aws_s3_bucket.tfstate[0].id
-  versioning_configuration {
-    status = "Enabled"
-  }
+  depends_on = [aws_kms_key.main]
 }
 
 # S3 Bucket server-side encryption
@@ -35,6 +27,16 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "tfstate" {
       sse_algorithm     = "aws:kms"
     }
     bucket_key_enabled = true
+  }
+}
+
+# S3 Bucket versioning
+resource "aws_s3_bucket_versioning" "tfstate" {
+  count = var.enabled ? 1 : 0
+
+  bucket = aws_s3_bucket.tfstate[0].id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
