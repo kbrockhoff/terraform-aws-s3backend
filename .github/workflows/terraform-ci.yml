@@ -52,19 +52,19 @@ jobs:
         category: checkov
 
     # Uncomment in actual module
-    # - name: Setup TFLint
-    #   uses: terraform-linters/setup-tflint@v4
-    #   with:
-    #     tflint_version: v0.58.1
+    - name: Setup TFLint
+      uses: terraform-linters/setup-tflint@v4
+      with:
+        tflint_version: v0.58.1
 
-    # - name: Show TFLint version
-    #   run: tflint --version
+    - name: Show TFLint version
+      run: tflint --version
 
-    # - name: Init TFLint
-    #   run: tflint --init
+    - name: Init TFLint
+      run: tflint --init
 
-    # - name: Run TFLint
-    #   run: tflint -f compact
+    - name: Run TFLint
+      run: tflint -f compact
       
     # Root module validation skipped - requires provider configuration
     # Root module is designed to be used as a module with providers passed in
@@ -136,12 +136,12 @@ jobs:
         terraform_version: "1.12.2"
 
     # Uncomment the following lines to run Terratest
-    # - name: Run Terratest
-    #   env:
-    #     TF_VAR_name_prefix: "ci-test"
-    #     TF_VAR_environment_type: "Development"
-    #     TF_VAR_tags: '{"Environment":"ci","Project":"terraform-module","ManagedBy":"github-actions"}'
-    #   run: |
-    #     cd test
-    #     go mod tidy
-    #     go test -v -timeout 30m
+    - name: Run Terratest
+      env:
+        TF_VAR_name_prefix: "ci-test"
+        TF_VAR_environment_type: "Development"
+        TF_VAR_tags: '{"Environment":"ci","Project":"terraform-module","ManagedBy":"github-actions"}'
+      run: |
+        cd test
+        go mod tidy
+        go test -v -timeout 30m
