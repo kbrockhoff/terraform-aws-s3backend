@@ -23,7 +23,6 @@ module "main" {
   data_tags                    = var.data_tags
   environment_type             = var.environment_type
   cost_estimation_enabled      = var.cost_estimation_enabled
-  networktags_name             = var.networktags_name
   create_kms_key               = var.create_kms_key
   kms_key_id                   = var.kms_key_id
   kms_key_deletion_window_days = var.kms_key_deletion_window_days
