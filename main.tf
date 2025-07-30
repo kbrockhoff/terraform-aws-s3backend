@@ -122,3 +122,35 @@ resource "aws_dynamodb_table" "tfstate_lock" {
     Name = "${local.name_prefix}-tfstate-${local.account_id}-lock"
   })
 }
+
+# S3 Bucket lifecycle configuration
+resource "aws_s3_bucket_lifecycle_configuration" "tfstate" {
+  count = var.enabled ? 1 : 0
+
+  bucket = aws_s3_bucket.tfstate[0].id
+
+  rule {
+    id     = "terraform_state_lifecycle"
+    status = "Enabled"
+
+    filter {
+      prefix = ""
+    }
+
+    # Transition non-current versions to IA after 30 days
+    noncurrent_version_transition {
+      noncurrent_days = 30
+      storage_class   = "STANDARD_IA"
+    }
+
+    # Delete non-current versions after 180 days
+    noncurrent_version_expiration {
+      noncurrent_days = 180
+    }
+
+    # Clean up incomplete multipart uploads after 7 days
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+}
