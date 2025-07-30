@@ -9,7 +9,6 @@ data_tags = {
 }
 environment_type        = "None"
 cost_estimation_enabled = true
-networktags_name        = "NetworkTags"
 monitoring_enabled      = true
 alarms_enabled          = true
 
