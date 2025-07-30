@@ -68,4 +68,50 @@ data "aws_iam_policy_document" "kms_key_policy" {
       values   = [true]
     }
   }
+
+  # Allow S3 service to use the key
+  statement {
+    sid    = "AllowS3Access"
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["s3.${local.dns_suffix}"]
+    }
+    actions = [
+      "kms:Decrypt",
+      "kms:DescribeKey",
+      "kms:Encrypt",
+      "kms:GenerateDataKey*",
+      "kms:ReEncrypt*"
+    ]
+    resources = ["*"]
+    condition {
+      test     = "StringEquals"
+      variable = "kms:ViaService"
+      values   = ["s3.${local.region}.${local.dns_suffix}"]
+    }
+  }
+
+  # Allow DynamoDB service to use the key
+  statement {
+    sid    = "AllowDynamoDBAccess"
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["dynamodb.${local.dns_suffix}"]
+    }
+    actions = [
+      "kms:Decrypt",
+      "kms:DescribeKey",
+      "kms:Encrypt",
+      "kms:GenerateDataKey*",
+      "kms:ReEncrypt*"
+    ]
+    resources = ["*"]
+    condition {
+      test     = "StringEquals"
+      variable = "kms:ViaService"
+      values   = ["dynamodb.${local.region}.${local.dns_suffix}"]
+    }
+  }
 }
