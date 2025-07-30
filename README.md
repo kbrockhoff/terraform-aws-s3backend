@@ -1,14 +1,16 @@
 # Brockhoff Cloud Terraform Module
 
-Terraform module which creates XXX resources on CLOUD. It takes an opinionated 
+Terraform module which creates Terraform S3 backend resources on AWS. It takes an opinionated 
 approach to resource placement, naming, tagging, and well-architected best 
 practices.
 
 ## Features
 
-- Feature 1
-- Feature 2
-- Feature 3
+- S3 bucket for Terraform state storage with versioning enabled
+- DynamoDB table for state locking with minimal read/write capacity
+- Customer-managed KMS key with key rotation for encryption
+- No public access bucket policy and secure transport requirement
+- CloudWatch alarms and SNS notifications for monitoring
 - Monthly cost estimate submodule
 - Deployment pipeline least privilege IAM role submodule
 
@@ -17,20 +19,63 @@ practices.
 ### Basic Example
 
 ```hcl
-module "example" {
-  source = "path/to/terraform-module"
+module "terraform_backend" {
+  source = "kbrockhoff/s3backend/aws"
 
-  # ... other required arguments ...
+  name_prefix = "myorg-prod-usw2"
+  
+  tags = {
+    Environment = "production"
+    Team        = "platform"
+  }
 }
 ```
 
 ### Complete Example
 
 ```hcl
-module "example" {
-  source = "path/to/terraform-module"
+module "terraform_backend" {
+  source = "kbrockhoff/s3backend/aws"
 
-  # ... all available arguments ...
+  enabled                      = true
+  name_prefix                  = "myorg-prod-usw2"
+  environment_type             = "Production"
+  
+  # KMS encryption configuration
+  create_kms_key               = true
+  kms_key_deletion_window_days = 14
+  
+  # Monitoring and alerting
+  monitoring_enabled           = true
+  alarms_enabled               = true
+  
+  tags = {
+    Environment = "production"
+    Team        = "platform"
+    Backup      = "required"
+  }
+  
+  data_tags = {
+    DataClassification = "internal"
+    Retention          = "7-years"
+  }
+}
+```
+
+### Using the Backend
+
+After creating the backend resources, configure your Terraform backend:
+
+```hcl
+terraform {
+  backend "s3" {
+    bucket         = "myorg-prod-usw2-tfstate-123456789012"
+    key            = "path/to/terraform.tfstate"
+    region         = "us-west-2"
+    encrypt        = true
+    kms_key_id     = "arn:aws:kms:us-west-2:123456789012:key/12345678-1234-1234-1234-123456789012"
+    dynamodb_table = "myorg-prod-usw2-tfstate-123456789012-lock"
+  }
 }
 ```
 
@@ -97,11 +142,6 @@ module "custom_resources" {
   # Specify all individual configuration values
   # when environment_type is "None"
 }
-```
-## Network Tags Configuration
-
-Resources deployed to subnets use lookup by `NetworkTags` values to determine which subnets to deploy to. 
-This eliminates the need to manage different subnet IDs variable values for each environment.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
