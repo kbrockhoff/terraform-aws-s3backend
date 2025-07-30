@@ -3,10 +3,6 @@
 # ----
 
 # S3 Bucket for Terraform state storage
-# checkov:skip=CKV_AWS_145:Encryption is properly configured via aws_s3_bucket_server_side_encryption_configuration
-# checkov:skip=CKV_AWS_21:Versioning is properly configured via aws_s3_bucket_versioning
-# checkov:skip=CKV2_AWS_61:Lifecyle is properly configured via aws_s3_bucket_lifecycle_configuration
-# checkov:skip=CKV2_AWS_6:Public access is properly configured via aws_s3_bucket_public_access_block
 resource "aws_s3_bucket" "tfstate" {
   count = var.enabled ? 1 : 0
 
