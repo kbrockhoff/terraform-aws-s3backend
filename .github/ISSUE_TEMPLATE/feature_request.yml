@@ -34,7 +34,7 @@ body:
       render: hcl
       placeholder: |
         # Example of how the feature might work
-        module "vpc" {
+        module "s3_backend" {
           source = "..."
           
           # new feature configuration
@@ -68,16 +68,16 @@ body:
       label: AWS Services Involved
       description: Which AWS services would this feature involve?
       options:
-        - label: VPC
-        - label: Subnets
-        - label: Route Tables
-        - label: Internet Gateway
-        - label: NAT Gateway
-        - label: VPC Endpoints
-        - label: Security Groups
-        - label: NACLs
-        - label: VPC Peering
-        - label: Transit Gateway
+        - label: S3
+        - label: DynamoDB
+        - label: KMS
+        - label: CloudWatch
+        - label: SNS
+        - label: IAM
+        - label: CloudFormation
+        - label: EventBridge
+        - label: Lambda
+        - label: Systems Manager
         - label: Other (please specify in additional context)
         
   - type: dropdown
