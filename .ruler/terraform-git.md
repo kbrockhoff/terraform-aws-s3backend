@@ -16,7 +16,7 @@
 ```bash
 git checkout main
 git pull origin main
-git checkout -b feature/add-vpc-module
+git checkout -b feature/add-to-module
 ```
 
 ### Keeping Branches Current
@@ -31,41 +31,38 @@ git rebase origin/main
 
 ## Pre-Commit Standards
 
-### Code Formatting (Required)
+### Complete Validation Pipeline (Recommended)
 ```bash
-terraform fmt -recursive
+# Single command runs complete validation: format, validate, lint, test, docs
+make validate
 ```
 
-### Documentation Generation (Required)
-```bash
-# Run only at repository root - configured for recursive documentation
-terraform-docs .
-```
+### Individual Validation Steps (If Needed)
+Use these for specific validation needs:
 
-### Validation Pipeline (Required)
-Execute in sequence - each step depends on the previous:
-
-1. **Syntax Check**
+1. **Code Formatting**
    ```bash
-   terraform init && terraform validate
+   make format
    ```
 
-2. **Linting**
+2. **Module & Example Validation**
    ```bash
-   tflint --recursive
+   make check
    ```
 
-3. **Example Validation**
+3. **Linting**
    ```bash
-   # Run in each example directory
-   for dir in examples/*/; do
-     (cd "$dir" && terraform init && terraform validate)
-   done
+   make lint
    ```
 
-4. **Test Execution**
+4. **Documentation Generation**
    ```bash
-   cd test && go test -v ./...
+   make docs
+   ```
+
+5. **Test Execution**
+   ```bash
+   make test
    ```
 
 ## Commit Standards
@@ -100,7 +97,13 @@ test(vpc): add integration test for NAT gateway
 Ensure all pre-commit checks pass:
 ```bash
 # Complete validation pipeline
-make validate  # or equivalent command sequence
+make validate
+```
+
+### Alternative: Pre-commit Only (No Tests)
+For quick validation without running AWS-dependent tests:
+```bash
+make pre-commit
 ```
 
 ### PR Requirements
@@ -119,11 +122,12 @@ make validate  # or equivalent command sequence
 ## Quality Gates
 
 ### Automated Checks (Must Pass)
-- Terraform formatting
-- Terraform validation
-- TFLint compliance
-- All tests passing
-- Documentation generation
+Run `make validate` to ensure all of the following pass:
+- Terraform formatting (`make format`)
+- Module & example validation (`make check`)
+- TFLint compliance (`make lint`)
+- All tests passing (`make test`)
+- Documentation generation (`make docs`)
 
 ### Manual Review Focus
 - **Simplicity**: Is the solution as simple as possible?
@@ -146,11 +150,23 @@ git reset --hard origin/main
 # Clean workspace
 git clean -fd
 
+# Clean Terraform temporary files
+make clean
 ```
 
 ## Notes for AI Agents
 
-- **Fail Fast**: Stop pipeline on first error
-- **Context Preservation**: Maintain clear audit trail of operations
-- **Rollback Strategy**: Always know how to undo changes
-- **Validation Order**: Run cheap checks first (fmt, lint) before expensive ones (tests)
+### Recommended Workflow Commands
+- **Development validation**: `make validate` (complete pipeline)
+- **Quick checks**: `make pre-commit` (no tests, no AWS needed)
+- **AWS session check**: `make check-aws` (verify AWS access before tests)
+- **Module information**: `make status` (comprehensive project info)
+- **Resource verification**: `make resource-count` (expected resource counts)
+- **Cleanup**: `make clean` (remove temporary files)
+
+### Best Practices
+- **Fail Fast**: Use `make validate` to stop pipeline on first error
+- **Context Preservation**: Use `make status` for project information gathering
+- **Rollback Strategy**: Always know how to undo changes with git and `make clean`
+- **AWS Validation**: Makefile automatically validates AWS session for tests
+- **Efficiency**: Single commands replace multiple manual operations
