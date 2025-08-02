@@ -39,8 +39,8 @@ This project adheres to a code of conduct. By participating, you are expected to
 
 1. Clone your fork:
    ```bash
-   git clone https://github.com/YOUR-USERNAME/terraform-aws-vpc.git
-   cd terraform-aws-vpc
+   git clone https://github.com/YOUR-USERNAME/terraform-aws-s3backend.git
+   cd terraform-aws-s3backend
    ```
 
 2. Create a new branch:
@@ -78,7 +78,7 @@ cd test
 go test -v -timeout 30m
 
 # Run specific test
-go test -v -timeout 30m -run TestVpcModule
+go test -v -timeout 30m -run TestTerraformDefaultsExample
 ```
 
 ### Test Structure
@@ -137,19 +137,19 @@ Follow the guidelines in [`.ruler/terraform-style.md`](.ruler/terraform-style.md
 ### Example:
 
 ```hcl
-variable "vpc_cidr_block" {
-  description = "CIDR block for the VPC"
+variable "name_prefix" {
+  description = "Name prefix for all resources"
   type        = string
   
   validation {
-    condition     = can(cidrhost(var.vpc_cidr_block, 0))
-    error_message = "VPC CIDR block must be a valid IPv4 CIDR."
+    condition     = can(regex("^[a-z][a-z0-9-]{1,15}$", var.name_prefix))
+    error_message = "Name prefix must be 2-16 characters, lowercase, start with letter."
   }
 }
 
-output "vpc_id" {
-  description = "ID of the VPC"
-  value       = aws_vpc.main.id
+output "s3_bucket_id" {
+  description = "ID of the S3 bucket for Terraform state"
+  value       = aws_s3_bucket.tfstate.id
 }
 ```
 
@@ -165,10 +165,10 @@ output "vpc_id" {
 Use clear, descriptive commit messages:
 
 ```
-feat: add support for VPC flow logs
+feat: add support for S3 bucket replication
 
-- Add vpc_flow_logs_enabled variable
-- Create CloudWatch log group for flow logs
+- Add cross_region_replication_enabled variable
+- Create destination bucket for replication
 - Update documentation and examples
 ```
 

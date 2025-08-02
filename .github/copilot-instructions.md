@@ -40,7 +40,7 @@ Source: .ruler/terraform-git.md
 ```bash
 git checkout main
 git pull origin main
-git checkout -b feature/add-vpc-module
+git checkout -b feature/add-s3-backend-feature
 ```
 
 ### Keeping Branches Current
@@ -107,10 +107,10 @@ Follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/):
 
 ### Examples
 ```
-feat(vpc): add multi-az subnet configuration
-fix(security-group): resolve circular dependency issue
+feat(s3): add cross-region replication configuration
+fix(dynamodb): resolve lock table capacity issue
 docs(readme): update module usage examples
-test(vpc): add integration test for NAT gateway
+test(backend): add integration test for state locking
 ```
 
 ### Commit Scope
@@ -542,11 +542,11 @@ resource "aws_launch_template" "main" {
 **Separate concerns** into focused files:
 
 ```
-terraform-aws-vpc/
-├── main.tf              # Core VPC resources
-├── subnets.tf           # Subnet resources
-├── routing.tf           # Route tables and routes
-├── security.tf          # Security groups and NACLs
+terraform-aws-s3backend/
+├── main.tf              # Core S3 and DynamoDB resources
+├── kms.tf               # KMS key resources
+├── alarms.tf            # CloudWatch alarms and monitoring
+├── pricing.tf           # Cost estimation resources
 ├── variables.tf         # Input variables
 ├── outputs.tf           # Output values
 ├── locals.tf            # Local computations
