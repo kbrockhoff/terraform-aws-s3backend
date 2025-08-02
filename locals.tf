@@ -66,7 +66,7 @@ locals {
   dns_suffix = data.aws_partition.current.dns_suffix
 
   common_tags = merge(var.tags, {
-    ModuleName    = "terraform-replace-me"
+    ModuleName    = "kbrockhoff/s3backend/aws"
     ModuleVersion = local.module_version
     ModuleEnvType = var.environment_type
   })
