@@ -97,8 +97,19 @@ variable "alarms_enabled" {
   default     = false
 }
 
+variable "create_alarm_sns_topic" {
+  description = "Set to true to create an SNS topic for alarm notifications. Set to false to use an existing topic specified in alarm_sns_topic_arn."
+  type        = bool
+  default     = true
+}
+
 variable "alarm_sns_topic_arn" {
-  description = "ARN of existing SNS topic to use for alarm notifications. If not provided, a new topic will be created."
+  description = "ARN of existing SNS topic to use for alarm notifications. Only used when create_alarm_sns_topic is false."
   type        = string
   default     = ""
+
+  validation {
+    condition     = (var.create_alarm_sns_topic && var.alarm_sns_topic_arn == "") || (!var.create_alarm_sns_topic && var.alarm_sns_topic_arn != "")
+    error_message = "alarm_sns_topic_arn must be empty when create_alarm_sns_topic is true, or provided when create_alarm_sns_topic is false."
+  }
 }

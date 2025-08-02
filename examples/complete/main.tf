@@ -28,5 +28,6 @@ module "main" {
   kms_key_deletion_window_days = var.kms_key_deletion_window_days
   monitoring_enabled           = var.monitoring_enabled
   alarms_enabled               = var.alarms_enabled
+  create_alarm_sns_topic       = var.create_alarm_sns_topic
   alarm_sns_topic_arn          = var.alarm_sns_topic_arn
 }

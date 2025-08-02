@@ -79,10 +79,10 @@ locals {
     var.create_kms_key ? aws_kms_key.main[0].arn : var.kms_key_id
   ) : ""
 
-  # SNS topic logic - use provided topic ARN or create new one
-  create_sns_topic = var.enabled && local.effective_config.alarms_enabled && var.alarm_sns_topic_arn == ""
+  # SNS topic logic - create topic based on variable or use provided topic ARN
+  create_sns_topic = var.enabled && local.effective_config.alarms_enabled && var.create_alarm_sns_topic
   alarm_sns_topic_arn = var.enabled && local.effective_config.alarms_enabled ? (
-    var.alarm_sns_topic_arn != "" ? var.alarm_sns_topic_arn : aws_sns_topic.alarms[0].arn
+    var.create_alarm_sns_topic ? aws_sns_topic.alarms[0].arn : var.alarm_sns_topic_arn
   ) : ""
 
 }

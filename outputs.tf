@@ -47,6 +47,20 @@ output "kms_alias_name" {
 }
 
 # ----
+# Monitoring
+# ----
+
+output "alarm_sns_topic_arn" {
+  description = "ARN of the SNS topic used for alarm notifications"
+  value       = local.alarm_sns_topic_arn
+}
+
+output "alarm_sns_topic_name" {
+  description = "Name of the SNS topic used for alarm notifications"
+  value       = var.enabled && local.effective_config.alarms_enabled && var.create_alarm_sns_topic ? aws_sns_topic.alarms[0].name : ""
+}
+
+# ----
 # Pricing
 # ----
 
