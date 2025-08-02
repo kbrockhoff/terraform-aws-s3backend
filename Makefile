@@ -130,7 +130,7 @@ destroy-examples: check-aws ## Destroy any leftover example resources (cleanup)
 	@for dir in examples/*/; do \
 		echo "$(CYAN)Destroying $$dir...$(RESET)"; \
 		(cd "$$dir" && \
-			terraform destroy -auto-approve 2>/dev/null || true); \
+			terraform destroy -auto-approve || true); \
 		echo "$(GREEN)✓ $$dir cleanup complete$(RESET)"; \
 	done
 
