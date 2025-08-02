@@ -49,4 +49,6 @@ terraform.rc
 # Ruler
 **/*.bak
 claude_desktop_config.json
+.cursor
+.windsurf
 
