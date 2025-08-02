@@ -155,7 +155,7 @@ module "custom_resources" {
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.6.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.0 |
 
 ## Modules
 
@@ -188,9 +188,10 @@ module "custom_resources" {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | Organization unique prefix to use for resource names. Recommend including environment and region. e.g. 'prod-usw2' | `string` | n/a | yes |
-| <a name="input_alarm_sns_topic_arn"></a> [alarm\_sns\_topic\_arn](#input\_alarm\_sns\_topic\_arn) | ARN of existing SNS topic to use for alarm notifications. If not provided, a new topic will be created. | `string` | `""` | no |
+| <a name="input_alarm_sns_topic_arn"></a> [alarm\_sns\_topic\_arn](#input\_alarm\_sns\_topic\_arn) | ARN of existing SNS topic to use for alarm notifications. Only used when create\_alarm\_sns\_topic is false. | `string` | `""` | no |
 | <a name="input_alarms_enabled"></a> [alarms\_enabled](#input\_alarms\_enabled) | Enable CloudWatch alarms for monitoring autoscaling group health | `bool` | `false` | no |
 | <a name="input_cost_estimation_enabled"></a> [cost\_estimation\_enabled](#input\_cost\_estimation\_enabled) | Set to false to disable estimation of monthly costs for provisioned resources | `bool` | `true` | no |
+| <a name="input_create_alarm_sns_topic"></a> [create\_alarm\_sns\_topic](#input\_create\_alarm\_sns\_topic) | Set to true to create an SNS topic for alarm notifications. Set to false to use an existing topic specified in alarm\_sns\_topic\_arn. | `bool` | `true` | no |
 | <a name="input_create_kms_key"></a> [create\_kms\_key](#input\_create\_kms\_key) | Set to true to create a customer-managed KMS key for encryption. Set to false to use an existing key specified in kms\_key\_id. | `bool` | `true` | no |
 | <a name="input_data_tags"></a> [data\_tags](#input\_data\_tags) | Tags/labels to apply to all resources with data-at-rest | `map(string)` | `{}` | no |
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | Set to false to prevent the module from creating any resources | `bool` | `true` | no |
@@ -198,13 +199,14 @@ module "custom_resources" {
 | <a name="input_kms_key_deletion_window_days"></a> [kms\_key\_deletion\_window\_days](#input\_kms\_key\_deletion\_window\_days) | Number of days to wait before deleting KMS key when destroyed. Only used when create\_kms\_key is true. | `number` | `14` | no |
 | <a name="input_kms_key_id"></a> [kms\_key\_id](#input\_kms\_key\_id) | ARN or ID of existing KMS key to use for encryption. Only used when create\_kms\_key is false. | `string` | `""` | no |
 | <a name="input_monitoring_enabled"></a> [monitoring\_enabled](#input\_monitoring\_enabled) | Launched EC2 instance will have detailed monitoring enabled. | `bool` | `false` | no |
-| <a name="input_networktags_name"></a> [networktags\_name](#input\_networktags\_name) | Name of the network tags key used for subnet classification | `string` | `"NetworkTags"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags/labels to apply to all resources | `map(string)` | `{}` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
+| <a name="output_alarm_sns_topic_arn"></a> [alarm\_sns\_topic\_arn](#output\_alarm\_sns\_topic\_arn) | ARN of the SNS topic used for alarm notifications |
+| <a name="output_alarm_sns_topic_name"></a> [alarm\_sns\_topic\_name](#output\_alarm\_sns\_topic\_name) | Name of the SNS topic used for alarm notifications |
 | <a name="output_cost_breakdown"></a> [cost\_breakdown](#output\_cost\_breakdown) | Detailed breakdown of monthly costs by service |
 | <a name="output_dynamodb_table_arn"></a> [dynamodb\_table\_arn](#output\_dynamodb\_table\_arn) | ARN of the DynamoDB table used for Terraform state locking |
 | <a name="output_dynamodb_table_name"></a> [dynamodb\_table\_name](#output\_dynamodb\_table\_name) | Name of the DynamoDB table used for Terraform state locking |
