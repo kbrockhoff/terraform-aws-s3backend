@@ -7,8 +7,16 @@ tags = {
 data_tags = {
   "DataClassification" = "Confidential"
 }
-environment_type        = "None"
-cost_estimation_enabled = true
-monitoring_enabled      = true
-alarms_enabled          = true
+environment_type = "None"
+cost_estimation_config = {
+  enabled = true
+}
+monitoring_config = {
+  enabled = true
+}
+alarms_config = {
+  enabled          = true
+  create_sns_topic = true
+  sns_topic_arn    = ""
+}
 

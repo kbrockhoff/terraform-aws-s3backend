@@ -9,9 +9,9 @@ module "pricing" {
     aws = aws.pricing
   }
 
-  enabled        = var.enabled && var.cost_estimation_enabled
+  enabled        = var.enabled && var.cost_estimation_config.enabled
   region         = local.region
-  create_kms_key = var.enabled && var.create_kms_key
+  create_kms_key = var.enabled && var.encryption_config.create_kms_key
 
   # S3 usage estimates
   s3_storage_gb           = 1   # 1GB for Terraform state files

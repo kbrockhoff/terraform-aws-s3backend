@@ -33,7 +33,7 @@ output "dynamodb_table_arn" {
 
 output "kms_key_id" {
   description = "ID of the KMS key used for encryption"
-  value       = var.enabled && var.create_kms_key ? aws_kms_key.main[0].key_id : ""
+  value       = var.enabled && var.encryption_config.create_kms_key ? aws_kms_key.main[0].key_id : ""
 }
 
 output "kms_key_arn" {
@@ -43,7 +43,7 @@ output "kms_key_arn" {
 
 output "kms_alias_name" {
   description = "Name of the KMS key alias"
-  value       = var.enabled && var.create_kms_key ? aws_kms_alias.main[0].name : ""
+  value       = var.enabled && var.encryption_config.create_kms_key ? aws_kms_alias.main[0].name : ""
 }
 
 # ----
@@ -57,7 +57,7 @@ output "alarm_sns_topic_arn" {
 
 output "alarm_sns_topic_name" {
   description = "Name of the SNS topic used for alarm notifications"
-  value       = var.enabled && local.effective_config.alarms_enabled && var.create_alarm_sns_topic ? aws_sns_topic.alarms[0].name : ""
+  value       = var.enabled && local.effective_config.alarms_enabled && var.alarms_config.create_sns_topic ? aws_sns_topic.alarms[0].name : ""
 }
 
 # ----

@@ -4,7 +4,7 @@
 
 # KMS Key for encrypting SNS topics and other resources
 resource "aws_kms_key" "main" {
-  count = var.enabled && var.create_kms_key ? 1 : 0
+  count = var.enabled && var.encryption_config.create_kms_key ? 1 : 0
 
   description             = "Customer-managed key for ${local.name_prefix} module encryption"
   deletion_window_in_days = local.effective_config.kms_key_deletion_window_days
@@ -19,7 +19,7 @@ resource "aws_kms_key" "main" {
 
 # KMS Key Alias for easier reference
 resource "aws_kms_alias" "main" {
-  count = var.enabled && var.create_kms_key ? 1 : 0
+  count = var.enabled && var.encryption_config.create_kms_key ? 1 : 0
 
   name          = "alias/${local.name_prefix}-cmk"
   target_key_id = aws_kms_key.main[0].key_id
@@ -27,7 +27,7 @@ resource "aws_kms_alias" "main" {
 
 # KMS Key Policy - allows account root and SNS service access
 data "aws_iam_policy_document" "kms_key_policy" {
-  count = var.enabled && var.create_kms_key ? 1 : 0
+  count = var.enabled && var.encryption_config.create_kms_key ? 1 : 0
 
   # Allow account root full access to the key
   statement {

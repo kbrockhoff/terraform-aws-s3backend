@@ -4,9 +4,9 @@ locals {
     None = {
       rpo_hours                    = null
       rto_hours                    = null
-      monitoring_enabled           = var.monitoring_enabled
-      alarms_enabled               = var.alarms_enabled
-      kms_key_deletion_window_days = var.kms_key_deletion_window_days
+      monitoring_enabled           = var.monitoring_config.enabled
+      alarms_enabled               = var.alarms_config.enabled
+      kms_key_deletion_window_days = var.encryption_config.kms_key_deletion_window_days
     }
     Ephemeral = {
       rpo_hours                    = null
@@ -76,13 +76,13 @@ locals {
 
   # KMS key logic - use provided key ID or create new one
   kms_key_id = var.enabled ? (
-    var.create_kms_key ? aws_kms_key.main[0].arn : var.kms_key_id
+    var.encryption_config.create_kms_key ? aws_kms_key.main[0].arn : var.encryption_config.kms_key_id
   ) : ""
 
   # SNS topic logic - create topic based on variable or use provided topic ARN
-  create_sns_topic = var.enabled && local.effective_config.alarms_enabled && var.create_alarm_sns_topic
+  create_sns_topic = var.enabled && local.effective_config.alarms_enabled && var.alarms_config.create_sns_topic
   alarm_sns_topic_arn = var.enabled && local.effective_config.alarms_enabled ? (
-    var.create_alarm_sns_topic ? aws_sns_topic.alarms[0].arn : var.alarm_sns_topic_arn
+    var.alarms_config.create_sns_topic ? aws_sns_topic.alarms[0].arn : var.alarms_config.sns_topic_arn
   ) : ""
 
 }
