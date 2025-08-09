@@ -1,4 +1,4 @@
-# Terraform AWS S3 Backend Module Makefile
+# Terraform Brockhoff Module Makefile
 # Optimized for AI agents to reduce LLM calls and token usage
 
 .PHONY: help validate test clean format docs all status pre-commit lint check plan-examples destroy-examples
@@ -21,7 +21,15 @@ help: ## Display this help message
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make $(CYAN)<target>$(RESET)\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  $(CYAN)%-15s$(RESET) %s\n", $$1, $$2 } /^##@/ { printf "\n$(YELLOW)%s$(RESET)\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 ##@ Validation
-validate: ## Run complete validation pipeline (format, validate, lint, test, docs)
+pre-commit: ## Run lightweight validation before commit without push (format, validate, lint, docs)
+	@echo "$(CYAN)Running pre-commit checks...$(RESET)"
+	@$(MAKE) format
+	@$(MAKE) check
+	@$(MAKE) lint
+	@$(MAKE) docs
+	@echo "$(GREEN)✓ Pre-commit checks passed$(RESET)"
+
+validate: ## Run complete validation pipeline before commit with push (format, validate, lint, test, docs)
 	@echo "$(CYAN)Running complete validation pipeline...$(RESET)"
 	@$(MAKE) format
 	@$(MAKE) check
@@ -163,29 +171,6 @@ status: ## Show comprehensive module status
 	@echo "$(YELLOW)Examples:$(RESET)"
 	@find examples -name "main.tf" 2>/dev/null | wc -l | xargs echo "Example directories:" || echo "Example directories: 0"
 
-info: ## Show quick module information
-	@echo "$(CYAN)=== Quick Info ===$(RESET)"
-	@echo "$(YELLOW)Module:$(RESET) Terraform AWS S3 Backend"
-	@echo "$(YELLOW)Purpose:$(RESET) Provisions S3 backend resources for Terraform state"
-	@echo "$(YELLOW)Resources:$(RESET) S3 bucket, DynamoDB table, KMS key, CloudWatch alarms"
-	@echo "$(YELLOW)Examples:$(RESET) defaults (9 resources), complete (15 resources)"
-	@echo "$(YELLOW)Tests:$(RESET) $$(find test -name "*_test.go" 2>/dev/null | wc -l | tr -d ' ') test files"
-
-##@ Pre-commit and CI
-pre-commit: ## Run pre-commit validation (what CI runs)
-	@echo "$(CYAN)Running pre-commit checks...$(RESET)"
-	@$(MAKE) format
-	@$(MAKE) check
-	@$(MAKE) lint
-	@$(MAKE) docs
-	@echo "$(GREEN)✓ Pre-commit checks passed$(RESET)"
-
-ci: check-aws ## Run full CI pipeline locally
-	@echo "$(CYAN)Running full CI pipeline...$(RESET)"
-	@$(MAKE) pre-commit
-	@$(MAKE) test
-	@echo "$(GREEN)✓ CI pipeline completed successfully$(RESET)"
-
 ##@ Cleanup
 clean: ## Clean up temporary files and caches
 	@echo "$(CYAN)Cleaning up...$(RESET)"
@@ -216,10 +201,6 @@ check-aws: ## Check for valid AWS session and credentials
 	@echo "$(CYAN)AWS Identity:$(RESET)"
 	@aws sts get-caller-identity --output table 2>/dev/null || echo "Could not retrieve identity details"
 
-check-aws-quiet: ## Check AWS session without output (for internal use)
-	@command -v aws >/dev/null 2>&1 || exit 1
-	@aws sts get-caller-identity >/dev/null 2>&1 || exit 1
-
 aws-info: check-aws ## Show detailed AWS session information
 	@echo "$(CYAN)=== AWS Session Details ===$(RESET)"
 	@echo "$(YELLOW)Identity:$(RESET)"
@@ -245,5 +226,19 @@ verify-tests: ## Verify test structure and names
 	@echo "  - TestEnabledFalse"
 
 ##@ Development
-all: clean validate test docs ## Run complete development workflow
+update-branch: ## Update current branch with latest main (merge if exists on origin, rebase if local only)
+	@echo "$(CYAN)Updating branch with latest main...$(RESET)"
+	@git fetch origin
+	@CURRENT_BRANCH=$$(git branch --show-current); \
+	if git show-ref --verify --quiet "refs/remotes/origin/$$CURRENT_BRANCH"; then \
+		echo "$(CYAN)Branch $$CURRENT_BRANCH exists on origin, merging main...$(RESET)"; \
+		git merge origin/main || (echo "$(RED)✗ Merge conflict detected. Please resolve manually.$(RESET)" && exit 1); \
+		echo "$(GREEN)✓ Merged main into $$CURRENT_BRANCH$(RESET)"; \
+	else \
+		echo "$(CYAN)Branch $$CURRENT_BRANCH is local only, rebasing on main...$(RESET)"; \
+		git rebase origin/main || (echo "$(RED)✗ Rebase conflict detected. Please resolve manually.$(RESET)" && exit 1); \
+		echo "$(GREEN)✓ Rebased $$CURRENT_BRANCH on main$(RESET)"; \
+	fi
+
+all: clean validate ## Run complete development workflow
 	@echo "$(GREEN)✓ Complete workflow finished$(RESET)"
