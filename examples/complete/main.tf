@@ -17,17 +17,13 @@ module "main" {
     aws.pricing = aws.pricing
   }
 
-  enabled                      = var.enabled
-  name_prefix                  = var.name_prefix
-  tags                         = var.tags
-  data_tags                    = var.data_tags
-  environment_type             = var.environment_type
-  cost_estimation_enabled      = var.cost_estimation_enabled
-  create_kms_key               = var.create_kms_key
-  kms_key_id                   = var.kms_key_id
-  kms_key_deletion_window_days = var.kms_key_deletion_window_days
-  monitoring_enabled           = var.monitoring_enabled
-  alarms_enabled               = var.alarms_enabled
-  create_alarm_sns_topic       = var.create_alarm_sns_topic
-  alarm_sns_topic_arn          = var.alarm_sns_topic_arn
+  enabled                = var.enabled
+  name_prefix            = var.name_prefix
+  tags                   = var.tags
+  data_tags              = var.data_tags
+  environment_type       = var.environment_type
+  cost_estimation_config = var.cost_estimation_config
+  encryption_config      = var.encryption_config
+  monitoring_config      = var.monitoring_config
+  alarms_config          = var.alarms_config
 }

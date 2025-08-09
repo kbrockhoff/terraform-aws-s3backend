@@ -9,8 +9,8 @@ variable "name_prefix" {
   type        = string
 
   validation {
-    condition     = can(regex("^[a-z][a-z0-9-]{1,15}$", var.name_prefix))
-    error_message = "The name_prefix value must be between 2 and 16 characters."
+    condition     = can(regex("^[a-z][a-z0-9-]{0,22}[a-z0-9]$", var.name_prefix))
+    error_message = "The name_prefix value must be between 2 and 24 characters."
   }
 }
 
