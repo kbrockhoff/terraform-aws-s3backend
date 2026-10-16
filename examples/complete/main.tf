@@ -24,6 +24,9 @@ module "main" {
   environment_type       = var.environment_type
   cost_estimation_config = var.cost_estimation_config
   encryption_config      = var.encryption_config
-  monitoring_config      = var.monitoring_config
-  alarms_config          = var.alarms_config
+
+  backward_compatibility_enabled = var.backward_compatibility_enabled
+
+  monitoring_config = var.monitoring_config
+  alarms_config     = var.alarms_config
 }

@@ -23,7 +23,7 @@ variable "s3_storage_gb" {
 }
 
 variable "s3_put_requests_monthly" {
-  description = "Estimated monthly S3 PUT/COPY/POST/LIST requests"
+  description = "Estimated monthly S3 PUT/COPY/POST/LIST requests, including state lock file writes"
   type        = number
   default     = 100
 }
@@ -36,26 +36,26 @@ variable "s3_get_requests_monthly" {
 
 # DynamoDB Configuration
 variable "dynamo_read_requests_monthly" {
-  description = "Estimated monthly DynamoDB read requests for state locking"
+  description = "Estimated monthly DynamoDB read requests for deprecated state locking (0 when no lock table is created)"
   type        = number
-  default     = 1000
+  default     = 0
 }
 
 variable "dynamo_write_requests_monthly" {
-  description = "Estimated monthly DynamoDB write requests for state locking"
+  description = "Estimated monthly DynamoDB write requests for deprecated state locking (0 when no lock table is created)"
   type        = number
-  default     = 500
+  default     = 0
 }
 
 variable "dynamo_storage_gb" {
-  description = "Estimated DynamoDB storage in GB for state lock records"
+  description = "Estimated DynamoDB storage in GB for deprecated state lock records (0 when no lock table is created)"
   type        = number
-  default     = 0.1
+  default     = 0
 }
 
 # CloudWatch Configuration
 variable "cloudwatch_alarms_count" {
   description = "Number of CloudWatch alarms to create"
   type        = number
-  default     = 5
+  default     = 3
 }

@@ -7,7 +7,8 @@ practices.
 ## Features
 
 - S3 bucket for Terraform state storage with versioning enabled
-- DynamoDB table for state locking with minimal read/write capacity
+- Native S3 state locking (`use_lockfile`) with no DynamoDB table required
+- Optional DynamoDB lock table (`backward_compatibility_enabled`) for backends not yet migrated off `dynamodb_table`
 - Customer-managed KMS key with key rotation for encryption
 - No public access bucket policy and secure transport requirement
 - CloudWatch alarms and SNS notifications for monitoring
@@ -64,20 +65,30 @@ module "terraform_backend" {
 
 ### Using the Backend
 
-After creating the backend resources, configure your Terraform backend:
+After creating the backend resources, configure your Terraform backend (requires Terraform >= 1.11):
 
 ```hcl
 terraform {
   backend "s3" {
-bucket         = "<YOUR_BUCKET_NAME>"
-key            = "path/to/terraform.tfstate"
-region         = "us-west-2"
-encrypt        = true
-kms_key_id     = "<YOUR_KMS_KEY_ARN>"
-dynamodb_table = "<YOUR_DYNAMODB_TABLE_NAME>"
+    bucket       = "<YOUR_BUCKET_NAME>"
+    key          = "path/to/terraform.tfstate"
+    region       = "us-west-2"
+    encrypt      = true
+    kms_key_id   = "<YOUR_KMS_KEY_ARN>"
+    use_lockfile = true
   }
 }
 ```
+
+State locking is handled by a `<key>.tflock` object written next to the state file, so no DynamoDB
+table is needed. DynamoDB-based locking is deprecated by HashiCorp, so the lock table is only created when
+`backward_compatibility_enabled = true`.
+
+To migrate an existing backend that uses `dynamodb_table`:
+
+1. Set `backward_compatibility_enabled = true` so the lock table is kept.
+2. Add `use_lockfile = true` alongside `dynamodb_table` in each backend config and run `terraform init -reconfigure`.
+3. Once every configuration uses `use_lockfile`, remove `dynamodb_table` and set `backward_compatibility_enabled = false`.
 
 ## Environment Type Configuration
 
@@ -147,26 +158,26 @@ module "custom_resources" {
 ## Requirements
 
 | Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5 |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.0 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_pricing"></a> [pricing](#module\_pricing) | ./modules/pricing | n/a |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_cloudwatch_metric_alarm.dynamodb_read_throttling](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
 | [aws_cloudwatch_metric_alarm.dynamodb_write_throttling](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
 | [aws_cloudwatch_metric_alarm.s3_4xx_errors](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
@@ -186,9 +197,10 @@ module "custom_resources" {
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | Organization unique prefix to use for resource names. Recommend including environment and region. e.g. 'prod-usw2' | `string` | n/a | yes |
 | <a name="input_alarms_config"></a> [alarms\_config](#input\_alarms\_config) | Configuration object for metric alarms and notifications | <pre>object({<br/>    enabled          = bool<br/>    create_sns_topic = bool<br/>    sns_topic_arn    = string<br/>  })</pre> | <pre>{<br/>  "create_sns_topic": true,<br/>  "enabled": false,<br/>  "sns_topic_arn": ""<br/>}</pre> | no |
+| <a name="input_backward_compatibility_enabled"></a> [backward\_compatibility\_enabled](#input\_backward\_compatibility\_enabled) | Set to true to also create a DynamoDB lock table for configurations still using the deprecated dynamodb\_table backend argument | `bool` | `false` | no |
 | <a name="input_cost_estimation_config"></a> [cost\_estimation\_config](#input\_cost\_estimation\_config) | Configuration object for monthly cost estimation | <pre>object({<br/>    enabled = bool<br/>  })</pre> | <pre>{<br/>  "enabled": true<br/>}</pre> | no |
 | <a name="input_data_tags"></a> [data\_tags](#input\_data\_tags) | Tags/labels to apply to all resources with data-at-rest | `map(string)` | `{}` | no |
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | Set to false to prevent the module from creating any resources | `bool` | `true` | no |
@@ -200,12 +212,12 @@ module "custom_resources" {
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_alarm_sns_topic_arn"></a> [alarm\_sns\_topic\_arn](#output\_alarm\_sns\_topic\_arn) | ARN of the SNS topic used for alarm notifications |
 | <a name="output_alarm_sns_topic_name"></a> [alarm\_sns\_topic\_name](#output\_alarm\_sns\_topic\_name) | Name of the SNS topic used for alarm notifications |
 | <a name="output_cost_breakdown"></a> [cost\_breakdown](#output\_cost\_breakdown) | Detailed breakdown of monthly costs by service |
-| <a name="output_dynamodb_table_arn"></a> [dynamodb\_table\_arn](#output\_dynamodb\_table\_arn) | ARN of the DynamoDB table used for Terraform state locking |
-| <a name="output_dynamodb_table_name"></a> [dynamodb\_table\_name](#output\_dynamodb\_table\_name) | Name of the DynamoDB table used for Terraform state locking |
+| <a name="output_dynamodb_table_arn"></a> [dynamodb\_table\_arn](#output\_dynamodb\_table\_arn) | ARN of the DynamoDB lock table (empty unless backward\_compatibility\_enabled is true) |
+| <a name="output_dynamodb_table_name"></a> [dynamodb\_table\_name](#output\_dynamodb\_table\_name) | Name of the DynamoDB lock table (empty unless backward\_compatibility\_enabled is true) |
 | <a name="output_kms_alias_name"></a> [kms\_alias\_name](#output\_kms\_alias\_name) | Name of the KMS key alias |
 | <a name="output_kms_key_arn"></a> [kms\_key\_arn](#output\_kms\_key\_arn) | ARN of the KMS key used for encryption |
 | <a name="output_kms_key_id"></a> [kms\_key\_id](#output\_kms\_key\_id) | ID of the KMS key used for encryption |

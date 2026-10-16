@@ -95,7 +95,7 @@ resource "aws_cloudwatch_metric_alarm" "s3_bytes_downloaded" {
 
 # DynamoDB Read Throttling Alarm
 resource "aws_cloudwatch_metric_alarm" "dynamodb_read_throttling" {
-  count = var.enabled && local.effective_config.alarms_enabled ? 1 : 0
+  count = local.create_lock_table && local.effective_config.alarms_enabled ? 1 : 0
 
   alarm_name          = "${local.name_prefix}-dynamodb-read-throttling"
   comparison_operator = "GreaterThanThreshold"
@@ -120,7 +120,7 @@ resource "aws_cloudwatch_metric_alarm" "dynamodb_read_throttling" {
 
 # DynamoDB Write Throttling Alarm
 resource "aws_cloudwatch_metric_alarm" "dynamodb_write_throttling" {
-  count = var.enabled && local.effective_config.alarms_enabled ? 1 : 0
+  count = local.create_lock_table && local.effective_config.alarms_enabled ? 1 : 0
 
   alarm_name          = "${local.name_prefix}-dynamodb-write-throttling"
   comparison_operator = "GreaterThanThreshold"
