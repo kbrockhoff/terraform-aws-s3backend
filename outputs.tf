@@ -18,13 +18,13 @@ output "s3_bucket_region" {
 }
 
 output "dynamodb_table_name" {
-  description = "Name of the DynamoDB table used for Terraform state locking"
-  value       = var.enabled ? aws_dynamodb_table.tfstate_lock[0].name : ""
+  description = "Name of the DynamoDB lock table (empty unless backward_compatibility_enabled is true)"
+  value       = local.create_lock_table ? aws_dynamodb_table.tfstate_lock[0].name : ""
 }
 
 output "dynamodb_table_arn" {
-  description = "ARN of the DynamoDB table used for Terraform state locking"
-  value       = var.enabled ? aws_dynamodb_table.tfstate_lock[0].arn : ""
+  description = "ARN of the DynamoDB lock table (empty unless backward_compatibility_enabled is true)"
+  value       = local.create_lock_table ? aws_dynamodb_table.tfstate_lock[0].arn : ""
 }
 
 # ----

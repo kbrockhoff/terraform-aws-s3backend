@@ -44,6 +44,16 @@ variable "environment_type" {
 }
 
 # ----
+# State Locking
+# ----
+
+variable "backward_compatibility_enabled" {
+  description = "Set to true to also create a DynamoDB lock table for configurations still using the deprecated dynamodb_table backend argument"
+  type        = bool
+  default     = false
+}
+
+# ----
 # Encryption
 # ----
 

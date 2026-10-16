@@ -134,9 +134,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "tfstate" {
   }
 }
 
-# DynamoDB table for Terraform state locking
+# DynamoDB table for deprecated DynamoDB-based state locking (backward compatibility only)
 resource "aws_dynamodb_table" "tfstate_lock" {
-  count = var.enabled ? 1 : 0
+  count = local.create_lock_table ? 1 : 0
 
   name         = "${local.name_prefix}-tfstate-${local.account_id}-lock"
   billing_mode = "PAY_PER_REQUEST"

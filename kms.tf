@@ -92,26 +92,29 @@ data "aws_iam_policy_document" "kms_key_policy" {
     }
   }
 
-  # Allow DynamoDB service to use the key
-  statement {
-    sid    = "AllowDynamoDBAccess"
-    effect = "Allow"
-    principals {
-      type        = "Service"
-      identifiers = ["dynamodb.${local.dns_suffix}"]
-    }
-    actions = [
-      "kms:Decrypt",
-      "kms:DescribeKey",
-      "kms:Encrypt",
-      "kms:GenerateDataKey*",
-      "kms:ReEncrypt*"
-    ]
-    resources = ["*"]
-    condition {
-      test     = "StringEquals"
-      variable = "kms:ViaService"
-      values   = ["dynamodb.${local.region}.${local.dns_suffix}"]
+  # Allow DynamoDB service to use the key (only when the backward compatible lock table is created)
+  dynamic "statement" {
+    for_each = local.create_lock_table ? [1] : []
+    content {
+      sid    = "AllowDynamoDBAccess"
+      effect = "Allow"
+      principals {
+        type        = "Service"
+        identifiers = ["dynamodb.${local.dns_suffix}"]
+      }
+      actions = [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:ReEncrypt*"
+      ]
+      resources = ["*"]
+      condition {
+        test     = "StringEquals"
+        variable = "kms:ViaService"
+        values   = ["dynamodb.${local.region}.${local.dns_suffix}"]
+      }
     }
   }
 }

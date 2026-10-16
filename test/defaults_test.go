@@ -52,10 +52,10 @@ func TestTerraformDefaultsExample(t *testing.T) {
 	assert.Contains(t, planOutput, "module.main.aws_s3_bucket_policy.tfstate[0]")
 	assert.Contains(t, planOutput, "module.main.aws_s3_bucket_lifecycle_configuration.tfstate[0]")
 	
-	// DynamoDB table
-	assert.Contains(t, planOutput, "module.main.aws_dynamodb_table.tfstate_lock[0]")
+	// State locking uses S3 lock files (use_lockfile), so no DynamoDB table should be planned
+	assert.NotContains(t, planOutput, "aws_dynamodb_table", "DynamoDB lock table should not be created")
 	
-	// Verify proper resource count (should show 9 resources to add)
+	// Verify proper resource count (should show 8 resources to add)
 	// Verify proper resource count by parsing the plan output for resources to add
 	re := regexp.MustCompile(`(\d+) to add, (\d+) to change, (\d+) to destroy`)
 	matches := re.FindStringSubmatch(planOutput)

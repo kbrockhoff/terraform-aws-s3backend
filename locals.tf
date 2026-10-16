@@ -79,6 +79,9 @@ locals {
     var.encryption_config.create_kms_key ? aws_kms_key.main[0].arn : var.encryption_config.kms_key_id
   ) : ""
 
+  # DynamoDB lock table is only needed for backends not yet migrated to use_lockfile
+  create_lock_table = var.enabled && var.backward_compatibility_enabled
+
   # SNS topic logic - create topic based on variable or use provided topic ARN
   create_sns_topic = var.enabled && local.effective_config.alarms_enabled && var.alarms_config.create_sns_topic
   alarm_sns_topic_arn = var.enabled && local.effective_config.alarms_enabled ? (

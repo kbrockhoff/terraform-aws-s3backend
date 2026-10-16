@@ -39,7 +39,7 @@ resource "aws_iam_role" "github_actions" {
 data "aws_iam_policy_document" "basic" {
   count = var.enabled ? 1 : 0
 
-  # S3 Backend Operations
+  # S3 Backend Operations (state files and .tflock lock files used by use_lockfile)
   statement {
     sid    = "TerraformStateS3Access"
     effect = "Allow"
@@ -66,33 +66,6 @@ data "aws_iam_policy_document" "basic" {
       test     = "Bool"
       variable = "aws:SecureTransport"
       values   = [true]
-    }
-  }
-
-  # DynamoDB State Locking
-  statement {
-    sid    = "TerraformStateLocking"
-    effect = "Allow"
-    actions = [
-      "dynamodb:GetItem",
-      "dynamodb:PutItem",
-      "dynamodb:DeleteItem",
-      "dynamodb:DescribeTable",
-    ]
-    resources = [
-      "arn:${var.partition}:dynamodb:${var.region}:${var.account_id}:table/${var.s3_backend_lock_table}"
-    ]
-
-    condition {
-      test     = "StringEquals"
-      variable = "aws:PrincipalAccount"
-      values   = [var.account_id]
-    }
-
-    condition {
-      test     = "StringEquals"
-      variable = "aws:RequestedRegion"
-      values   = [var.region]
     }
   }
 
@@ -123,41 +96,6 @@ data "aws_iam_policy_document" "basic" {
 # IAM Policy Document for Resource Management Operations
 data "aws_iam_policy_document" "resource_management" {
   count = var.enabled ? 1 : 0
-
-  # DynamoDB Operations
-  statement {
-    sid    = "DynamoDBResourceManagement"
-    effect = "Allow"
-    actions = [
-      "dynamodb:CreateTable",
-      "dynamodb:DescribeContinuousBackups",
-      "dynamodb:DescribeTable",
-      "dynamodb:DescribeTimeToLive",
-      "dynamodb:ListTagsOfResource",
-    ]
-    resources = [
-      "arn:${var.partition}:dynamodb:${var.region}:${var.account_id}:table/${var.name_prefix}-*"
-    ]
-
-    condition {
-      test     = "StringEquals"
-      variable = "aws:PrincipalAccount"
-      values   = [var.account_id]
-    }
-
-    condition {
-      test     = "StringEquals"
-      variable = "aws:RequestedRegion"
-      values   = [var.region]
-    }
-
-    # Restrict write operations to resources with specific name prefix
-    condition {
-      test     = "ForAllValues:StringLike"
-      variable = "dynamodb:tablename"
-      values   = ["${var.name_prefix}-*"]
-    }
-  }
 
   # KMS Operations
   statement {

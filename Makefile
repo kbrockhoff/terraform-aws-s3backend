@@ -213,8 +213,9 @@ aws-info: check-aws ## Show detailed AWS session information
 ##@ AI Agent Shortcuts
 resource-count: ## Show expected resource counts for verification
 	@echo "$(CYAN)Expected Resource Counts:$(RESET)"
-	@echo "$(YELLOW)Defaults example:$(RESET) 9 resources (KMS key/alias, S3 bucket + configs, DynamoDB table)"
-	@echo "$(YELLOW)Complete example:$(RESET) 15 resources (+ SNS topic, 5 CloudWatch alarms)"
+	@echo "$(YELLOW)Defaults example:$(RESET) 8 resources (KMS key/alias, S3 bucket + configs)"
+	@echo "$(YELLOW)Complete example:$(RESET) 12 resources (+ SNS topic, 3 CloudWatch alarms)"
+	@echo "$(YELLOW)Complete + backward_compatibility_enabled:$(RESET) 15 resources (+ DynamoDB lock table, 2 alarms)"
 	@echo "$(YELLOW)Enabled=false:$(RESET) 0 resources"
 
 verify-tests: ## Verify test structure and names
@@ -223,6 +224,7 @@ verify-tests: ## Verify test structure and names
 	@echo "$(YELLOW)Expected tests:$(RESET)"
 	@echo "  - TestTerraformDefaultsExample"
 	@echo "  - TestTerraformCompleteExample" 
+	@echo "  - TestBackwardCompatibilityEnabledCreatesLockTable"
 	@echo "  - TestEnabledFalse"
 
 ##@ Development
