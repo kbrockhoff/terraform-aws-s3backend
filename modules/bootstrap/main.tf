@@ -69,6 +69,36 @@ data "aws_iam_policy_document" "basic" {
     }
   }
 
+  # DynamoDB State Locking (only for backends still configured with dynamodb_table)
+  dynamic "statement" {
+    for_each = var.s3_backend_lock_table == null ? [] : [var.s3_backend_lock_table]
+    content {
+      sid    = "TerraformStateLocking"
+      effect = "Allow"
+      actions = [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+      ]
+      resources = [
+        "arn:${var.partition}:dynamodb:${var.region}:${var.account_id}:table/${statement.value}"
+      ]
+
+      condition {
+        test     = "StringEquals"
+        variable = "aws:PrincipalAccount"
+        values   = [var.account_id]
+      }
+
+      condition {
+        test     = "StringEquals"
+        variable = "aws:RequestedRegion"
+        values   = [var.region]
+      }
+    }
+  }
+
   # Basic AWS API access for resource management
   statement {
     sid    = "BasicAWSAccess"
@@ -96,6 +126,37 @@ data "aws_iam_policy_document" "basic" {
 # IAM Policy Document for Resource Management Operations
 data "aws_iam_policy_document" "resource_management" {
   count = var.enabled ? 1 : 0
+
+  # DynamoDB Operations (only for the backward compatibility lock table)
+  dynamic "statement" {
+    for_each = var.s3_backend_lock_table == null ? [] : [var.s3_backend_lock_table]
+    content {
+      sid    = "DynamoDBResourceManagement"
+      effect = "Allow"
+      actions = [
+        "dynamodb:CreateTable",
+        "dynamodb:DescribeContinuousBackups",
+        "dynamodb:DescribeTable",
+        "dynamodb:DescribeTimeToLive",
+        "dynamodb:ListTagsOfResource",
+      ]
+      resources = [
+        "arn:${var.partition}:dynamodb:${var.region}:${var.account_id}:table/${statement.value}"
+      ]
+
+      condition {
+        test     = "StringEquals"
+        variable = "aws:PrincipalAccount"
+        values   = [var.account_id]
+      }
+
+      condition {
+        test     = "StringEquals"
+        variable = "aws:RequestedRegion"
+        values   = [var.region]
+      }
+    }
+  }
 
   # KMS Operations
   statement {

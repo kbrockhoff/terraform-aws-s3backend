@@ -56,3 +56,9 @@ variable "s3_backend_bucket" {
   description = "S3 bucket name for Terraform state backend"
   type        = string
 }
+
+variable "s3_backend_lock_table" {
+  description = "DynamoDB lock table name, only when the parent module sets backward_compatibility_enabled = true. Grants backend locking and table management permissions; leave null for use_lockfile only."
+  type        = string
+  default     = null
+}
