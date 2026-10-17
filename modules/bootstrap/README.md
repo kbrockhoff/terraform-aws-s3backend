@@ -45,6 +45,7 @@ No modules.
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | Set to false to prevent the module from creating any resources. | `bool` | `true` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name for OIDC trust (e.g., 'development', 'staging', 'production') | `string` | `"*"` | no |
 | <a name="input_partition"></a> [partition](#input\_partition) | AWS partition | `string` | `"aws"` | no |
+| <a name="input_s3_backend_lock_table"></a> [s3\_backend\_lock\_table](#input\_s3\_backend\_lock\_table) | DynamoDB lock table name, only when the parent module sets backward\_compatibility\_enabled = true. Grants backend locking and table management permissions; leave null for use\_lockfile only. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags/labels to apply to all resources. | `map(string)` | `{}` | no |
 
 ## Outputs
