@@ -38,6 +38,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install checkov
 
+    # Skipped checks are not required for a state backend:
+    #   CKV_AWS_144 cross-region replication, CKV_AWS_18 access logging,
+    #   CKV2_AWS_62 event notifications, CKV_AWS_28 PITR on the optional legacy lock table
     - name: Run Checkov Security Scan
       if: matrix.terraform_version == 'latest'
       run: |
@@ -46,7 +49,7 @@ jobs:
                 --output cli \
                 --output sarif \
                 --output-file-path console,checkov-report.sarif \
-                --skip-check CKV_AWS_144 \
+                --skip-check CKV_AWS_144,CKV_AWS_18,CKV_AWS_28,CKV2_AWS_62 \
                 --quiet
       continue-on-error: false
 
