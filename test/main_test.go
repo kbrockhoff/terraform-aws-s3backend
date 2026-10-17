@@ -1,6 +1,9 @@
 package test
 
 import (
+	"io/fs"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -12,6 +15,50 @@ import (
 func TestMain(m *testing.M) {
 	// Run the tests
 	m.Run()
+}
+
+// copyExampleToTemp copies the repo's Terraform sources to a per-test temp dir and returns the example
+// path within it, so tests sharing an example can run in parallel without racing on .terraform or local
+// state. The root module is copied too because examples reference it via a relative source.
+func copyExampleToTemp(t *testing.T, examplePath string) string {
+	t.Helper()
+	srcRoot := ".."
+	dstRoot := t.TempDir()
+
+	err := filepath.WalkDir(srcRoot, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		// Skip hidden dirs (.git, .terraform) and the Go test dir
+		if d.IsDir() && path != srcRoot && (strings.HasPrefix(d.Name(), ".") || d.Name() == "test") {
+			return filepath.SkipDir
+		}
+		if d.IsDir() || !isTerraformSource(d.Name()) {
+			return nil
+		}
+		rel, err := filepath.Rel(srcRoot, path)
+		if err != nil {
+			return err
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		dst := filepath.Join(dstRoot, rel)
+		if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+			return err
+		}
+		return os.WriteFile(dst, data, 0o644)
+	})
+	if err != nil {
+		t.Fatalf("copying Terraform sources to temp dir: %v", err)
+	}
+	return filepath.Join(dstRoot, examplePath)
+}
+
+// isTerraformSource reports whether a file is needed to init and plan, excluding local state
+func isTerraformSource(name string) bool {
+	return strings.HasSuffix(name, ".tf") || strings.HasSuffix(name, ".tfvars") || name == ".terraform.lock.hcl"
 }
 
 // Helper function to get default terraform options for testing
