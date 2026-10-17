@@ -1,6 +1,8 @@
 # Contributing
 
-Thank you for your interest in contributing to this Terraform module! We welcome contributions from the community and appreciate your help in making this module better.
+Thank you for your interest in contributing to this Terraform module! We
+welcome contributions from the community and appreciate your help in making
+this module better.
 
 ## Table of Contents
 
@@ -15,7 +17,9 @@ Thank you for your interest in contributing to this Terraform module! We welcome
 
 ## Code of Conduct
 
-This project adheres to a code of conduct. By participating, you are expected to uphold this code. Please be respectful and constructive in all interactions.
+This project adheres to a code of conduct. By participating, you are
+expected to uphold this code. Please be respectful and constructive in
+all interactions.
 
 ## Getting Started
 
@@ -30,20 +34,22 @@ This project adheres to a code of conduct. By participating, you are expected to
 
 ### Prerequisites
 
-- [Terraform](https://www.terraform.io/downloads.html) >= 1.5
-- [Go](https://golang.org/dl/) >= 1.19 (for testing)
+- [Terraform](https://www.terraform.io/downloads.html) >= 1.11
+- [Go](https://golang.org/dl/) >= 1.26 (for testing)
 - AWS CLI configured with appropriate credentials
 - Git
 
 ### Local Development
 
 1. Clone your fork:
+
    ```bash
    git clone https://github.com/YOUR-USERNAME/terraform-aws-s3backend.git
    cd terraform-aws-s3backend
    ```
 
 2. Create a new branch:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -78,7 +84,7 @@ cd test
 go test -v -timeout 30m
 
 # Run specific test
-go test -v -timeout 30m -run TestTerraformDefaultsExample
+go test -v -timeout 30m -run TestVpcModule
 ```
 
 ### Test Structure
@@ -126,7 +132,7 @@ Before submitting changes:
 
 ### Terraform Code Style
 
-Follow the guidelines in [`.ruler/terraform-style.md`](.ruler/terraform-style.md):
+Follow the Terraform Style Guide in [`AGENTS.md`](../AGENTS.md#terraform-style-guide):
 
 - Use `terraform fmt` for consistent formatting
 - Use snake_case for all identifiers
@@ -134,22 +140,22 @@ Follow the guidelines in [`.ruler/terraform-style.md`](.ruler/terraform-style.md
 - Use explicit type constraints
 - Follow the established file organization
 
-### Example:
+### Example
 
 ```hcl
-variable "name_prefix" {
-  description = "Name prefix for all resources"
+variable "vpc_cidr_block" {
+  description = "CIDR block for the VPC"
   type        = string
   
   validation {
-    condition     = can(regex("^[a-z][a-z0-9-]{0,22}[a-z0-9]$", var.name_prefix))
-    error_message = "Name prefix must be 2-24 characters, lowercase, start with letter, end with alphanumeric."
+    condition     = can(cidrhost(var.vpc_cidr_block, 0))
+    error_message = "VPC CIDR block must be a valid IPv4 CIDR."
   }
 }
 
-output "s3_bucket_id" {
-  description = "ID of the S3 bucket for Terraform state"
-  value       = aws_s3_bucket.tfstate.id
+output "vpc_id" {
+  description = "ID of the VPC"
+  value       = aws_vpc.main.id
 }
 ```
 
@@ -164,15 +170,16 @@ output "s3_bucket_id" {
 
 Use clear, descriptive commit messages:
 
-```
-feat: add support for S3 bucket replication
+```text
+feat: add support for VPC flow logs
 
-- Add cross_region_replication_enabled variable
-- Create destination bucket for replication
+- Add vpc_flow_logs_enabled variable
+- Create CloudWatch log group for flow logs
 - Update documentation and examples
 ```
 
 **Commit types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
