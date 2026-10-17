@@ -90,6 +90,36 @@ To migrate an existing backend that uses `dynamodb_table`:
 2. Add `use_lockfile = true` alongside `dynamodb_table` in each backend config and run `terraform init -reconfigure`.
 3. Once every configuration uses `use_lockfile`, remove `dynamodb_table` and set `backward_compatibility_enabled = false`.
 
+## CI/CD Permissions
+
+The `modules/deployer` submodule creates the least privilege IAM policies a pipeline needs to
+plan, apply and destroy this module. Attach them to the role created by
+[terraform-aws-cicdrole](https://github.com/kbrockhoff/terraform-aws-cicdrole), which owns the
+OIDC trust and Terraform state access:
+
+```hcl
+module "cicd_role" {
+  source = "github.com/kbrockhoff/terraform-aws-cicdrole"
+
+  name_prefix   = "prod-usw2"
+  cicd_provider = "github-actions"
+  git_repos     = ["my-infra-repo"]
+  # ...
+}
+
+module "s3backend_deployer" {
+  source = "github.com/kbrockhoff/terraform-aws-s3backend//modules/deployer"
+
+  name_prefix   = "prod-usw2" # same prefix the pipeline uses for this module
+  iam_role_name = module.cicd_role.role_name
+  region        = data.aws_region.current.region
+  account_id    = data.aws_caller_identity.current.account_id
+
+  # Match this module's setting to also grant lock table management
+  backward_compatibility_enabled = false
+}
+```
+
 ## Environment Type Configuration
 
 The `environment_type` variable provides a standardized way to configure resource defaults based on environment 
