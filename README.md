@@ -202,7 +202,7 @@ module "custom_resources" {
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
-| <a name="module_pricing"></a> [pricing](#module\_pricing) | ./modules/pricing | n/a |
+| <a name="module_pricing"></a> [pricing](#module\_pricing) | ./modules/cost-estimation | n/a |
 
 ## Resources
 
@@ -231,7 +231,7 @@ module "custom_resources" {
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | Organization unique prefix to use for resource names. Recommend including environment and region. e.g. 'prod-usw2' | `string` | n/a | yes |
 | <a name="input_alarms_config"></a> [alarms\_config](#input\_alarms\_config) | Configuration object for metric alarms and notifications | <pre>object({<br/>    enabled          = bool<br/>    create_sns_topic = bool<br/>    sns_topic_arn    = string<br/>  })</pre> | <pre>{<br/>  "create_sns_topic": true,<br/>  "enabled": false,<br/>  "sns_topic_arn": ""<br/>}</pre> | no |
 | <a name="input_backward_compatibility_enabled"></a> [backward\_compatibility\_enabled](#input\_backward\_compatibility\_enabled) | Set to true to also create a DynamoDB lock table for configurations still using the deprecated dynamodb\_table backend argument | `bool` | `false` | no |
-| <a name="input_cost_estimation_config"></a> [cost\_estimation\_config](#input\_cost\_estimation\_config) | Configuration object for monthly cost estimation | <pre>object({<br/>    enabled = bool<br/>  })</pre> | <pre>{<br/>  "enabled": true<br/>}</pre> | no |
+| <a name="input_cost_estimation_config"></a> [cost\_estimation\_config](#input\_cost\_estimation\_config) | Configuration object for monthly cost estimation. Optional attributes are monthly usage assumptions for the state bucket and the legacy DynamoDB lock table. | <pre>object({<br/>    enabled                              = bool<br/>    s3_storage_gb                        = optional(number, 1)<br/>    s3_put_requests_monthly              = optional(number, 600)<br/>    s3_get_requests_monthly              = optional(number, 500)<br/>    dynamodb_read_request_units_monthly  = optional(number, 1000)<br/>    dynamodb_write_request_units_monthly = optional(number, 500)<br/>    dynamodb_storage_gb                  = optional(number, 0.1)<br/>  })</pre> | <pre>{<br/>  "enabled": true<br/>}</pre> | no |
 | <a name="input_data_tags"></a> [data\_tags](#input\_data\_tags) | Tags/labels to apply to all resources with data-at-rest | `map(string)` | `{}` | no |
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | Set to false to prevent the module from creating any resources | `bool` | `true` | no |
 | <a name="input_encryption_config"></a> [encryption\_config](#input\_encryption\_config) | Configuration object for encryption settings and KMS key management | <pre>object({<br/>    create_kms_key               = bool<br/>    kms_key_id                   = string<br/>    kms_key_deletion_window_days = number<br/>  })</pre> | <pre>{<br/>  "create_kms_key": true,<br/>  "kms_key_deletion_window_days": 14,<br/>  "kms_key_id": ""<br/>}</pre> | no |

@@ -125,9 +125,15 @@ variable "alarms_config" {
 # ----
 
 variable "cost_estimation_config" {
-  description = "Configuration object for monthly cost estimation"
+  description = "Configuration object for monthly cost estimation. Optional attributes are monthly usage assumptions for the state bucket and the legacy DynamoDB lock table."
   type = object({
-    enabled = bool
+    enabled                              = bool
+    s3_storage_gb                        = optional(number, 1)
+    s3_put_requests_monthly              = optional(number, 600)
+    s3_get_requests_monthly              = optional(number, 500)
+    dynamodb_read_request_units_monthly  = optional(number, 1000)
+    dynamodb_write_request_units_monthly = optional(number, 500)
+    dynamodb_storage_gb                  = optional(number, 0.1)
   })
   default = {
     enabled = true
