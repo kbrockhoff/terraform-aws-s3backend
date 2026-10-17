@@ -12,8 +12,8 @@ func TestTerraformCompleteExample(t *testing.T) {
 	expectedName := generateTestNamePrefix("comp")
 
 	terraformOptions := &terraform.Options{
-		// The path to where our Terraform code is located
-		TerraformDir: "../examples/complete",
+		// Isolated copy of the example so parallel tests don't share .terraform or local state
+		TerraformDir: copyExampleToTemp(t, "examples/complete"),
 
 		// Variables to pass to our Terraform code using -var options
 		Vars: map[string]interface{}{
@@ -71,8 +71,8 @@ func TestBackwardCompatibilityEnabledCreatesLockTable(t *testing.T) {
 	expectedName := generateTestNamePrefix("bc")
 
 	terraformOptions := &terraform.Options{
-		// The path to where our Terraform code is located
-		TerraformDir: "../examples/complete",
+		// Isolated copy of the example so parallel tests don't share .terraform or local state
+		TerraformDir: copyExampleToTemp(t, "examples/complete"),
 
 		// Variables to pass to our Terraform code using -var options
 		Vars: map[string]interface{}{
@@ -108,8 +108,8 @@ func TestEnabledFalse(t *testing.T) {
 	expectedName := generateTestNamePrefix("comp")
 
 	terraformOptions := &terraform.Options{
-		// The path to where our Terraform code is located
-		TerraformDir: "../examples/complete",
+		// Isolated copy of the example so parallel tests don't share .terraform or local state
+		TerraformDir: copyExampleToTemp(t, "examples/complete"),
 
 		// Variables to pass to our Terraform code using -var options
 		Vars: map[string]interface{}{
