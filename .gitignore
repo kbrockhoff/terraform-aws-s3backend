@@ -6,9 +6,6 @@
 *.tfstate
 *.tfstate.*
 
-# .tfplan files
-*.tfplan
-
 # Crash log files
 crash.log
 crash.*.log
@@ -42,13 +39,17 @@ terraform.rc
 
 # IDEs
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
 *.sublime-project
 *.sublime-workspace
 
-# Ruler
-**/*.bak
-claude_desktop_config.json
+# AI agents
+.claude/settings.local.json
+
+
+# Module-specific
+# .tfplan files
+*.tfplan
 .cursor
 .windsurf
-
