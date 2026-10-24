@@ -92,49 +92,87 @@ data "aws_iam_policy_document" "main" {
 
   # KMS actions which do not support resource-level permissions
   statement {
-    sid    = "KmsGlobal"
+    sid    = "KmsList"
     effect = "Allow"
     actions = [
-      "kms:CreateKey",
       "kms:ListAliases",
       "kms:ListKeys",
     ]
     resources = ["*"]
   }
 
-  # Key IDs are AWS-generated, so keys are scoped to the account/region. Also covers the
-  # grants DynamoDB creates when the lock table is encrypted with the key.
+  # Key creation only when the new key is tagged as the module's key
   statement {
-    sid    = "KmsKeyManagement"
+    sid    = "KmsKeyCreate"
     effect = "Allow"
     actions = [
-      "kms:CreateGrant",
-      "kms:Decrypt",
+      "kms:CreateKey",
+    ]
+    resources = ["*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestTag/Name"
+      values   = [local.kms_key_name]
+    }
+  }
+
+  # Tag-on-create: the key has no Name tag yet and the request sets it to the module's key name
+  statement {
+    sid    = "KmsKeyTagOnCreate"
+    effect = "Allow"
+    actions = [
+      "kms:TagResource",
+    ]
+    resources = [
+      "arn:${var.partition}:kms:${var.region}:${var.account_id}:key/*",
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestTag/Name"
+      values   = [local.kms_key_name]
+    }
+
+    condition {
+      test     = "Null"
+      variable = "aws:ResourceTag/Name"
+      values   = ["true"]
+    }
+  }
+
+  # Key IDs are AWS-generated, so keys are scoped to the account/region. Reads are unconditioned
+  # so refresh does not depend on tag propagation.
+  statement {
+    sid    = "KmsKeyRead"
+    effect = "Allow"
+    actions = [
       "kms:DescribeKey",
-      "kms:EnableKeyRotation",
-      "kms:GenerateDataKey",
       "kms:GetKeyPolicy",
       "kms:GetKeyRotationStatus",
       "kms:ListGrants",
       "kms:ListResourceTags",
-      "kms:PutKeyPolicy",
-      "kms:RetireGrant",
-      "kms:RevokeGrant",
-      "kms:TagResource",
-      "kms:UntagResource",
-      "kms:UpdateKeyDescription",
     ]
     resources = [
       "arn:${var.partition}:kms:${var.region}:${var.account_id}:key/*",
     ]
   }
 
-  # Key deletion only on the module's own key, identified by its Name tag
+  # Changes to existing keys only on the module's own key, identified by its Name tag. Also
+  # covers the grants DynamoDB creates when the lock table is encrypted with the key.
   statement {
-    sid    = "KmsKeyDeletion"
+    sid    = "KmsKeyManagement"
     effect = "Allow"
     actions = [
+      "kms:CreateGrant",
+      "kms:Decrypt",
+      "kms:EnableKeyRotation",
+      "kms:GenerateDataKey",
+      "kms:PutKeyPolicy",
+      "kms:RetireGrant",
+      "kms:RevokeGrant",
       "kms:ScheduleKeyDeletion",
+      "kms:UpdateKeyDescription",
     ]
     resources = [
       "arn:${var.partition}:kms:${var.region}:${var.account_id}:key/*",
@@ -143,7 +181,32 @@ data "aws_iam_policy_document" "main" {
     condition {
       test     = "StringEquals"
       variable = "aws:ResourceTag/Name"
-      values   = ["${var.name_prefix}-cmk"]
+      values   = [local.kms_key_name]
+    }
+  }
+
+  # Tag changes on the module's own key, which can neither change nor remove its Name tag
+  statement {
+    sid    = "KmsKeyTagging"
+    effect = "Allow"
+    actions = [
+      "kms:TagResource",
+      "kms:UntagResource",
+    ]
+    resources = [
+      "arn:${var.partition}:kms:${var.region}:${var.account_id}:key/*",
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/Name"
+      values   = [local.kms_key_name]
+    }
+
+    condition {
+      test     = "ForAllValues:StringNotEquals"
+      variable = "aws:TagKeys"
+      values   = ["Name"]
     }
   }
 
@@ -157,9 +220,44 @@ data "aws_iam_policy_document" "main" {
       "kms:UpdateAlias",
     ]
     resources = [
-      "arn:${var.partition}:kms:${var.region}:${var.account_id}:alias/${var.name_prefix}-cmk",
+      "arn:${var.partition}:kms:${var.region}:${var.account_id}:alias/${local.kms_key_name}",
+    ]
+  }
+
+  statement {
+    sid    = "KmsAliasTargetKey"
+    effect = "Allow"
+    actions = [
+      "kms:CreateAlias",
+      "kms:DeleteAlias",
+      "kms:UpdateAlias",
+    ]
+    resources = [
       "arn:${var.partition}:kms:${var.region}:${var.account_id}:key/*",
     ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/Name"
+      values   = [local.kms_key_name]
+    }
+  }
+
+  # Externally supplied key (encryption_config.kms_key_id in the parent module), which DynamoDB
+  # validates and creates grants on when the deprecated lock table is encrypted with it
+  dynamic "statement" {
+    for_each = var.kms_key_arn != "" ? [var.kms_key_arn] : []
+    content {
+      sid    = "KmsExternalKeyUse"
+      effect = "Allow"
+      actions = [
+        "kms:CreateGrant",
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:GenerateDataKey",
+      ]
+      resources = [statement.value]
+    }
   }
 
   statement {

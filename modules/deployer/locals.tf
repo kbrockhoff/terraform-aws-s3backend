@@ -17,4 +17,5 @@ locals {
   # Resource names as set by the parent module (not configurable there)
   state_bucket_name = "${var.name_prefix}-tfstate-${var.account_id}"
   lock_table_name   = "${local.state_bucket_name}-lock"
+  kms_key_name      = "${var.name_prefix}-cmk"
 }

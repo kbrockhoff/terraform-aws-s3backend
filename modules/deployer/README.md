@@ -43,7 +43,22 @@ Set `backward_compatibility_enabled = true` when the parent module sets it, to a
 management of the deprecated DynamoDB lock table (`<name_prefix>-tfstate-<account_id>-lock`).
 
 KMS key IDs are AWS-generated, so key permissions are scoped to `key/*` in the account and
-region; `kms:ScheduleKeyDeletion` is further limited to keys tagged `Name = <name_prefix>-cmk`.
+region and identified by the parent module's `Name = <name_prefix>-cmk` tag:
+
+- `kms:CreateKey` requires the new key to be tagged `Name = <name_prefix>-cmk`.
+- Changes to existing keys (key policy, rotation, grants, deletion, tagging, alias targets) are
+  limited to keys already tagged `Name = <name_prefix>-cmk`, and the `Name` tag itself can
+  neither be changed nor removed.
+- Only read-only key actions (`DescribeKey`, `GetKeyPolicy`, ...) apply to every key.
+
+Tag-on-create allows setting `Name = <name_prefix>-cmk` on a key that has no `Name` tag, so the
+pipeline could "claim" an existing untagged key whose key policy delegates to IAM. Tag
+unrelated keys with a `Name`, or deny the deployer role in their key policies, to prevent this.
+KMS tag changes can take a few minutes to affect authorization.
+
+When the parent module uses an existing key (`encryption_config.create_kms_key = false`), set
+`kms_key_arn` to that key's ARN to grant the `DescribeKey`, `CreateGrant` and data key access
+DynamoDB needs for the deprecated lock table.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -80,6 +95,7 @@ No modules.
 | <a name="input_backward_compatibility_enabled"></a> [backward\_compatibility\_enabled](#input\_backward\_compatibility\_enabled) | Must match the parent module's backward\_compatibility\_enabled. Set to true to also grant management of the deprecated DynamoDB lock table. | `bool` | `false` | no |
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | Set to false to prevent the module from creating any resources. | `bool` | `true` | no |
 | <a name="input_iam_role_name"></a> [iam\_role\_name](#input\_iam\_role\_name) | Name of an existing IAM role to attach the policies to, typically the role\_name output of terraform-aws-cicdrole. Leave empty to only create the policies. | `string` | `""` | no |
+| <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | ARN of the existing KMS key passed to the parent module as encryption\_config.kms\_key\_id when it does not create its own key. Leave empty when the parent module creates the key. | `string` | `""` | no |
 | <a name="input_partition"></a> [partition](#input\_partition) | AWS partition | `string` | `"aws"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags/labels to apply to all resources. | `map(string)` | `{}` | no |
 

@@ -13,4 +13,7 @@ locals {
   } : {}
 
   attach_to_role = var.enabled && var.iam_role_name != ""
+
+  # Name tag the parent module sets on its KMS key, used to tie KMS permissions to that key
+  kms_key_name = "${var.name_prefix}-cmk"
 }

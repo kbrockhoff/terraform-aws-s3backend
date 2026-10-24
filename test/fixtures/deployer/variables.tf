@@ -32,3 +32,9 @@ variable "backward_compatibility_enabled" {
   type        = bool
   default     = false
 }
+
+variable "kms_key_arn" {
+  description = "ARN of an existing KMS key used by the parent module"
+  type        = string
+  default     = ""
+}
