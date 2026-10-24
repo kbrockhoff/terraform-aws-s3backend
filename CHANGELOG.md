@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.0.0](https://github.com/kbrockhoff/terraform-aws-s3backend/compare/v0.1.0...v1.0.0) (2026-10-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* **cost-estimation:** modules/pricing is now modules/cost-estimation with quantity inputs (create_kms_key -> kms_key_count, cloudwatch_alarms_count -> cloudwatch_alarm_count, dynamo_* -> dynamodb_*). cost_breakdown keys dynamo_read_requests, dynamo_write_requests and dynamo_storage are renamed to dynamodb_*, and sns_requests is added.
+* **deployer:** modules/bootstrap is removed, along with its role, github_org, github_repo, environment and state backend inputs and its role and policy outputs. Cut over in this order: apply terraform-aws-cicdrole and modules/deployer with iam_role_name = module.<cicdrole>.role_name; point the pipeline at the <name_prefix>-cicd-deployer role and confirm a plan; then remove the old bootstrap module, which destroys the <name_prefix>-github-actions role.
+* the DynamoDB lock table and its alarms are destroyed on upgrade unless backward_compatibility_enabled = true. The bootstrap submodule's s3_backend_lock_table input was removed.
+
+### Features
+
+* replace DynamoDB locking with S3 native lockfile ([cdd8546](https://github.com/kbrockhoff/terraform-aws-s3backend/commit/cdd8546003249de5528d16410453d7df08d347e5))
+
+
+### Bug Fixes
+
+* **bootstrap:** grant DynamoDB permissions when lock table is configured ([4a6054a](https://github.com/kbrockhoff/terraform-aws-s3backend/commit/4a6054ac1d1ec336d3c8d65d4a241efae33be338))
+* **deployer:** scope KMS permissions to the module-owned key ([e8b8a66](https://github.com/kbrockhoff/terraform-aws-s3backend/commit/e8b8a66d4dd572f5d24e0fd3d839ee19c823ebdb))
+
+
+### Code Refactoring
+
+* **cost-estimation:** replace pricing submodule with cost-estimation ([e1c2eda](https://github.com/kbrockhoff/terraform-aws-s3backend/commit/e1c2eda167771ebf06f2ffdea94991574d13a87d))
+* **deployer:** replace bootstrap submodule with deployer policies ([d71ef47](https://github.com/kbrockhoff/terraform-aws-s3backend/commit/d71ef47dba371f9bb52fdca773308487bbfcc420))
+
 ## 0.1.0 (2025-08-09)
 
 
