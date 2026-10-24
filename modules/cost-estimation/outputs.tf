@@ -4,6 +4,6 @@ output "monthly_cost_estimate" {
 }
 
 output "cost_breakdown" {
-  description = "Detailed breakdown of monthly costs by service"
+  description = "Estimated monthly cost in USD by component, e.g. kms_keys, s3_storage, cloudwatch_alarms"
   value       = local.pricing_enabled ? local.costs : {}
 }

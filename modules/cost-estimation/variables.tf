@@ -1,5 +1,5 @@
 variable "enabled" {
-  description = "Set to false to prevent the module from creating any resources"
+  description = "Set to false to skip the price lookups and return a zero estimate"
   type        = bool
   default     = true
 }

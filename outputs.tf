@@ -61,15 +61,15 @@ output "alarm_sns_topic_name" {
 }
 
 # ----
-# Pricing
+# Cost Estimation
 # ----
 
 output "monthly_cost_estimate" {
   description = "Estimated monthly cost in USD for module resources"
-  value       = module.pricing.monthly_cost_estimate
+  value       = module.cost_estimation.monthly_cost_estimate
 }
 
 output "cost_breakdown" {
-  description = "Detailed breakdown of monthly costs by service"
-  value       = module.pricing.cost_breakdown
+  description = "Estimated monthly cost in USD by component, e.g. kms_keys, s3_storage, cloudwatch_alarms"
+  value       = module.cost_estimation.cost_breakdown
 }

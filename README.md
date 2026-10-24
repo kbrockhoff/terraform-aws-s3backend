@@ -1,4 +1,4 @@
-# Brockhoff Cloud Terraform Module
+# AWS S3 Backend Terraform Module
 
 Terraform module which creates Terraform S3 backend resources on AWS. It takes an opinionated 
 approach to resource placement, naming, tagging, and well-architected best 
@@ -13,7 +13,7 @@ practices.
 - No public access bucket policy and secure transport requirement
 - CloudWatch alarms and SNS notifications for monitoring
 - Monthly cost estimate submodule
-- Deployment pipeline least privilege IAM role submodule
+- CI/CD deployer least privilege IAM policies submodule
 
 ## Usage
 
@@ -38,18 +38,29 @@ module "terraform_backend" {
 module "terraform_backend" {
   source = "kbrockhoff/s3backend/aws"
 
-  enabled                      = true
-  name_prefix                  = "myorg-prod-usw2"
-  environment_type             = "Production"
-  
+  enabled     = true
+  name_prefix = "myorg-prod-usw2"
+
+  # "None" applies the individual config values below instead of environment defaults
+  environment_type = "None"
+
   # KMS encryption configuration
-  create_kms_key               = true
-  kms_key_deletion_window_days = 14
-  
-  # Monitoring and alerting
-  monitoring_enabled           = true
-  alarms_enabled               = true
-  
+  encryption_config = {
+    create_kms_key               = true
+    kms_key_id                   = ""
+    kms_key_deletion_window_days = 14
+  }
+
+  # Alerting
+  alarms_config = {
+    enabled          = true
+    create_sns_topic = true
+    sns_topic_arn    = ""
+  }
+
+  # Keep the lock table for backends still using dynamodb_table
+  backward_compatibility_enabled = true
+
   tags = {
     Environment = "production"
     Team        = "platform"
@@ -144,7 +155,7 @@ the table below. Cost optimization settings focus on shutting down resources dur
 #### Development Environment
 ```hcl
 module "dev_resources" {
-  source = "path/to/terraform-module"
+  source = "kbrockhoff/s3backend/aws"
   
   name_prefix      = "dev-usw2"
   environment_type = "Development"
@@ -159,7 +170,7 @@ module "dev_resources" {
 #### Production Environment
 ```hcl
 module "prod_resources" {
-  source = "path/to/terraform-module"
+  source = "kbrockhoff/s3backend/aws"
   
   name_prefix      = "prod-usw2"
   environment_type = "Production"
@@ -175,7 +186,7 @@ module "prod_resources" {
 #### Custom Configuration (None)
 ```hcl
 module "custom_resources" {
-  source = "path/to/terraform-module"
+  source = "kbrockhoff/s3backend/aws"
   
   name_prefix      = "custom-usw2"
   environment_type = "None"
@@ -202,7 +213,7 @@ module "custom_resources" {
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
-| <a name="module_pricing"></a> [pricing](#module\_pricing) | ./modules/cost-estimation | n/a |
+| <a name="module_cost_estimation"></a> [cost\_estimation](#module\_cost\_estimation) | ./modules/cost-estimation | n/a |
 
 ## Resources
 
@@ -229,14 +240,14 @@ module "custom_resources" {
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | Organization unique prefix to use for resource names. Recommend including environment and region. e.g. 'prod-usw2' | `string` | n/a | yes |
-| <a name="input_alarms_config"></a> [alarms\_config](#input\_alarms\_config) | Configuration object for metric alarms and notifications | <pre>object({<br/>    enabled          = bool<br/>    create_sns_topic = bool<br/>    sns_topic_arn    = string<br/>  })</pre> | <pre>{<br/>  "create_sns_topic": true,<br/>  "enabled": false,<br/>  "sns_topic_arn": ""<br/>}</pre> | no |
+| <a name="input_alarms_config"></a> [alarms\_config](#input\_alarms\_config) | Configuration object for metric alarms and notifications. enabled only applies when environment\_type is 'None'; Production and MissionCritical enable alarms and other types disable them. | <pre>object({<br/>    enabled          = bool<br/>    create_sns_topic = bool<br/>    sns_topic_arn    = string<br/>  })</pre> | <pre>{<br/>  "create_sns_topic": true,<br/>  "enabled": false,<br/>  "sns_topic_arn": ""<br/>}</pre> | no |
 | <a name="input_backward_compatibility_enabled"></a> [backward\_compatibility\_enabled](#input\_backward\_compatibility\_enabled) | Set to true to also create a DynamoDB lock table for configurations still using the deprecated dynamodb\_table backend argument | `bool` | `false` | no |
 | <a name="input_cost_estimation_config"></a> [cost\_estimation\_config](#input\_cost\_estimation\_config) | Configuration object for monthly cost estimation. Optional attributes are monthly usage assumptions for the state bucket and the legacy DynamoDB lock table. | <pre>object({<br/>    enabled                              = bool<br/>    s3_storage_gb                        = optional(number, 1)<br/>    s3_put_requests_monthly              = optional(number, 600)<br/>    s3_get_requests_monthly              = optional(number, 500)<br/>    dynamodb_read_request_units_monthly  = optional(number, 1000)<br/>    dynamodb_write_request_units_monthly = optional(number, 500)<br/>    dynamodb_storage_gb                  = optional(number, 0.1)<br/>  })</pre> | <pre>{<br/>  "enabled": true<br/>}</pre> | no |
 | <a name="input_data_tags"></a> [data\_tags](#input\_data\_tags) | Tags/labels to apply to all resources with data-at-rest | `map(string)` | `{}` | no |
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | Set to false to prevent the module from creating any resources | `bool` | `true` | no |
-| <a name="input_encryption_config"></a> [encryption\_config](#input\_encryption\_config) | Configuration object for encryption settings and KMS key management | <pre>object({<br/>    create_kms_key               = bool<br/>    kms_key_id                   = string<br/>    kms_key_deletion_window_days = number<br/>  })</pre> | <pre>{<br/>  "create_kms_key": true,<br/>  "kms_key_deletion_window_days": 14,<br/>  "kms_key_id": ""<br/>}</pre> | no |
+| <a name="input_encryption_config"></a> [encryption\_config](#input\_encryption\_config) | Configuration object for encryption settings and KMS key management. kms\_key\_deletion\_window\_days only applies when environment\_type is 'None'; other environment types set it. | <pre>object({<br/>    create_kms_key               = bool<br/>    kms_key_id                   = string<br/>    kms_key_deletion_window_days = number<br/>  })</pre> | <pre>{<br/>  "create_kms_key": true,<br/>  "kms_key_deletion_window_days": 14,<br/>  "kms_key_id": ""<br/>}</pre> | no |
 | <a name="input_environment_type"></a> [environment\_type](#input\_environment\_type) | Environment type for resource configuration defaults. Select 'None' to use individual config values. | `string` | `"Development"` | no |
-| <a name="input_monitoring_config"></a> [monitoring\_config](#input\_monitoring\_config) | Configuration object for optional monitoring | <pre>object({<br/>    enabled = bool<br/>  })</pre> | <pre>{<br/>  "enabled": false<br/>}</pre> | no |
+| <a name="input_monitoring_config"></a> [monitoring\_config](#input\_monitoring\_config) | Configuration object for optional monitoring. enabled only applies when environment\_type is 'None'; other environment types set it. | <pre>object({<br/>    enabled = bool<br/>  })</pre> | <pre>{<br/>  "enabled": false<br/>}</pre> | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags/labels to apply to all resources | `map(string)` | `{}` | no |
 
 ## Outputs
@@ -245,7 +256,7 @@ module "custom_resources" {
 | ---- | ----------- |
 | <a name="output_alarm_sns_topic_arn"></a> [alarm\_sns\_topic\_arn](#output\_alarm\_sns\_topic\_arn) | ARN of the SNS topic used for alarm notifications |
 | <a name="output_alarm_sns_topic_name"></a> [alarm\_sns\_topic\_name](#output\_alarm\_sns\_topic\_name) | Name of the SNS topic used for alarm notifications |
-| <a name="output_cost_breakdown"></a> [cost\_breakdown](#output\_cost\_breakdown) | Detailed breakdown of monthly costs by service |
+| <a name="output_cost_breakdown"></a> [cost\_breakdown](#output\_cost\_breakdown) | Estimated monthly cost in USD by component, e.g. kms\_keys, s3\_storage, cloudwatch\_alarms |
 | <a name="output_dynamodb_table_arn"></a> [dynamodb\_table\_arn](#output\_dynamodb\_table\_arn) | ARN of the DynamoDB lock table (empty unless backward\_compatibility\_enabled is true) |
 | <a name="output_dynamodb_table_name"></a> [dynamodb\_table\_name](#output\_dynamodb\_table\_name) | Name of the DynamoDB lock table (empty unless backward\_compatibility\_enabled is true) |
 | <a name="output_kms_alias_name"></a> [kms\_alias\_name](#output\_kms\_alias\_name) | Name of the KMS key alias |
