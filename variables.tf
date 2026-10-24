@@ -58,7 +58,7 @@ variable "backward_compatibility_enabled" {
 # ----
 
 variable "encryption_config" {
-  description = "Configuration object for encryption settings and KMS key management"
+  description = "Configuration object for encryption settings and KMS key management. kms_key_deletion_window_days only applies when environment_type is 'None'; other environment types set it."
   type = object({
     create_kms_key               = bool
     kms_key_id                   = string
@@ -89,7 +89,7 @@ variable "encryption_config" {
 # ----
 
 variable "monitoring_config" {
-  description = "Configuration object for optional monitoring"
+  description = "Configuration object for optional monitoring. enabled only applies when environment_type is 'None'; other environment types set it."
   type = object({
     enabled = bool
   })
@@ -99,7 +99,7 @@ variable "monitoring_config" {
 }
 
 variable "alarms_config" {
-  description = "Configuration object for metric alarms and notifications"
+  description = "Configuration object for metric alarms and notifications. enabled only applies when environment_type is 'None'; Production and MissionCritical enable alarms and other types disable them."
   type = object({
     enabled          = bool
     create_sns_topic = bool

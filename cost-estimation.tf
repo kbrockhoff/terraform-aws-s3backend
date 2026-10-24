@@ -1,8 +1,8 @@
 # ----
-# Pricing Calculator
+# Cost Estimation
 # ----
 
-module "pricing" {
+module "cost_estimation" {
   source = "./modules/cost-estimation"
 
   providers = {

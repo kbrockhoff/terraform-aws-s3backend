@@ -63,7 +63,7 @@ No modules.
 | <a name="input_dynamodb_read_request_units_monthly"></a> [dynamodb\_read\_request\_units\_monthly](#input\_dynamodb\_read\_request\_units\_monthly) | Monthly DynamoDB on-demand read request units for the legacy lock table (0 when no lock table is created) | `number` | `0` | no |
 | <a name="input_dynamodb_storage_gb"></a> [dynamodb\_storage\_gb](#input\_dynamodb\_storage\_gb) | DynamoDB storage in GB for legacy lock records (0 when no lock table is created) | `number` | `0` | no |
 | <a name="input_dynamodb_write_request_units_monthly"></a> [dynamodb\_write\_request\_units\_monthly](#input\_dynamodb\_write\_request\_units\_monthly) | Monthly DynamoDB on-demand write request units for the legacy lock table (0 when no lock table is created) | `number` | `0` | no |
-| <a name="input_enabled"></a> [enabled](#input\_enabled) | Set to false to prevent the module from creating any resources | `bool` | `true` | no |
+| <a name="input_enabled"></a> [enabled](#input\_enabled) | Set to false to skip the price lookups and return a zero estimate | `bool` | `true` | no |
 | <a name="input_kms_key_count"></a> [kms\_key\_count](#input\_kms\_key\_count) | Number of KMS keys to include in cost estimation | `number` | `0` | no |
 | <a name="input_s3_get_requests_monthly"></a> [s3\_get\_requests\_monthly](#input\_s3\_get\_requests\_monthly) | Monthly S3 GET and other requests | `number` | `0` | no |
 | <a name="input_s3_put_requests_monthly"></a> [s3\_put\_requests\_monthly](#input\_s3\_put\_requests\_monthly) | Monthly S3 PUT/COPY/POST/LIST requests, including .tflock lock file writes | `number` | `0` | no |
@@ -73,6 +73,6 @@ No modules.
 
 | Name | Description |
 | ---- | ----------- |
-| <a name="output_cost_breakdown"></a> [cost\_breakdown](#output\_cost\_breakdown) | Detailed breakdown of monthly costs by service |
+| <a name="output_cost_breakdown"></a> [cost\_breakdown](#output\_cost\_breakdown) | Estimated monthly cost in USD by component, e.g. kms\_keys, s3\_storage, cloudwatch\_alarms |
 | <a name="output_monthly_cost_estimate"></a> [monthly\_cost\_estimate](#output\_monthly\_cost\_estimate) | Total estimated monthly cost in USD for module resources |
 <!-- END_TF_DOCS -->    
