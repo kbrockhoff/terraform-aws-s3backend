@@ -30,41 +30,122 @@ data "aws_iam_policy_document" "main" {
 
   # KMS actions which do not support resource-level permissions
   statement {
-    sid    = "KmsGlobal"
+    sid    = "KmsList"
     effect = "Allow"
     actions = [
-      "kms:CreateKey",
       "kms:ListAliases",
       "kms:ListKeys",
     ]
     resources = ["*"]
   }
 
+  # Key creation only when the new key is tagged as the module's key
+  statement {
+    sid    = "KmsKeyCreate"
+    effect = "Allow"
+    actions = [
+      "kms:CreateKey",
+    ]
+    resources = ["*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestTag/Name"
+      values   = [local.kms_key_name]
+    }
+  }
+
+  # Tag-on-create: the key has no Name tag yet and the request sets it to the module's key name
+  statement {
+    sid    = "KmsKeyTagOnCreate"
+    effect = "Allow"
+    actions = [
+      "kms:TagResource",
+    ]
+    resources = [
+      "arn:${var.partition}:kms:${var.region}:${var.account_id}:key/*",
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestTag/Name"
+      values   = [local.kms_key_name]
+    }
+
+    condition {
+      test     = "Null"
+      variable = "aws:ResourceTag/Name"
+      values   = ["true"]
+    }
+  }
+
+  # Key IDs are AWS-generated, so keys are scoped to the account/region. Reads are unconditioned
+  # so refresh does not depend on tag propagation.
+  statement {
+    sid    = "KmsKeyRead"
+    effect = "Allow"
+    actions = [
+      "kms:DescribeKey",
+      "kms:GetKeyPolicy",
+      "kms:GetKeyRotationStatus",
+      "kms:ListGrants",
+      "kms:ListResourceTags",
+    ]
+    resources = [
+      "arn:${var.partition}:kms:${var.region}:${var.account_id}:key/*",
+    ]
+  }
+
+  # Changes to existing keys only on the module's own key, identified by its Name tag
   statement {
     sid    = "KmsKeyManagement"
     effect = "Allow"
     actions = [
       "kms:CancelKeyDeletion",
       "kms:CreateGrant",
-      "kms:DescribeKey",
       "kms:DisableKey",
       "kms:DisableKeyRotation",
       "kms:EnableKey",
       "kms:EnableKeyRotation",
-      "kms:GetKeyPolicy",
-      "kms:GetKeyRotationStatus",
-      "kms:ListGrants",
-      "kms:ListResourceTags",
       "kms:PutKeyPolicy",
       "kms:RetireGrant",
       "kms:RevokeGrant",
       "kms:ScheduleKeyDeletion",
+    ]
+    resources = [
+      "arn:${var.partition}:kms:${var.region}:${var.account_id}:key/*",
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/Name"
+      values   = [local.kms_key_name]
+    }
+  }
+
+  # Tag changes on the module's own key, which can neither change nor remove its Name tag
+  statement {
+    sid    = "KmsKeyTagging"
+    effect = "Allow"
+    actions = [
       "kms:TagResource",
       "kms:UntagResource",
     ]
     resources = [
       "arn:${var.partition}:kms:${var.region}:${var.account_id}:key/*",
     ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/Name"
+      values   = [local.kms_key_name]
+    }
+
+    condition {
+      test     = "ForAllValues:StringNotEquals"
+      variable = "aws:TagKeys"
+      values   = ["Name"]
+    }
   }
 
   # Alias management requires permission on both the alias and the target key
@@ -77,9 +158,27 @@ data "aws_iam_policy_document" "main" {
       "kms:UpdateAlias",
     ]
     resources = [
-      "arn:${var.partition}:kms:${var.region}:${var.account_id}:alias/${var.name_prefix}-*",
+      "arn:${var.partition}:kms:${var.region}:${var.account_id}:alias/${local.kms_key_name}",
+    ]
+  }
+
+  statement {
+    sid    = "KmsAliasTargetKey"
+    effect = "Allow"
+    actions = [
+      "kms:CreateAlias",
+      "kms:DeleteAlias",
+      "kms:UpdateAlias",
+    ]
+    resources = [
       "arn:${var.partition}:kms:${var.region}:${var.account_id}:key/*",
     ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/Name"
+      values   = [local.kms_key_name]
+    }
   }
 
   statement {

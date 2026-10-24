@@ -13,4 +13,5 @@ module "deployer" {
   region                         = var.region
   account_id                     = var.account_id
   backward_compatibility_enabled = var.backward_compatibility_enabled
+  kms_key_arn                    = var.kms_key_arn
 }

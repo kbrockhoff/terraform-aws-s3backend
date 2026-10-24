@@ -126,7 +126,12 @@ Scoping:
   `iam:CreateServiceLinkedRole` gated on `iam:AWSServiceName`.
 - Resources whose ARN contains an AWS-generated ID (EC2, VPC, KMS keys) are scoped to the
   account/region wildcard, and tightened with `aws:RequestTag/Name` / `aws:ResourceTag/Name`
-  conditions on create/delete actions where the service supports them.
+  conditions where the service supports them. For KMS keys, only read actions (`Describe*`,
+  `Get*`, `List*`) go unconditioned; every other key action, including `TagResource`,
+  `PutKeyPolicy` and the key side of alias actions, requires `aws:ResourceTag/Name` to equal
+  the module's key name. Tag-on-create gets its own statement (`aws:RequestTag/Name` plus a
+  `Null` `aws:ResourceTag/Name`), and tag updates deny changing the `Name` key via
+  `ForAllValues:StringNotEquals` on `aws:TagKeys`, so the pipeline can't claim unrelated keys.
 - **IAM roles, instance profiles and PassRole use exact names** (`role/${var.name_prefix}-inst`),
   never `role/${var.name_prefix}-*`. That wildcard also matches cicdrole's own
   `${var.name_prefix}-cicd-deployer` role, which would let the pipeline rewrite its own

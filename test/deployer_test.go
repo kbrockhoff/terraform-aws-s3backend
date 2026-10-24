@@ -20,9 +20,10 @@ const (
 
 // policyStatement is an IAM policy statement; Action and Resource may be a string or a list
 type policyStatement struct {
-	Sid      string          `json:"Sid"`
-	Action   json.RawMessage `json:"Action"`
-	Resource json.RawMessage `json:"Resource"`
+	Sid       string                    `json:"Sid"`
+	Action    json.RawMessage           `json:"Action"`
+	Resource  json.RawMessage           `json:"Resource"`
+	Condition map[string]map[string]any `json:"Condition"`
 }
 
 // getDeployerOptions returns plan options for an isolated copy of the deployer fixture
@@ -106,6 +107,65 @@ func TestDeployerCreatesPolicyScopedToStateBucket(t *testing.T) {
 				"statement %s grants state data action %s", sid, action)
 		}
 	}
+}
+
+func TestDeployerScopesKmsMutationsToModuleKey(t *testing.T) {
+	t.Parallel()
+	namePrefix := generateTestNamePrefix("dep")
+
+	terraformOptions := getDeployerOptions(t, map[string]interface{}{
+		"name_prefix": namePrefix,
+	})
+	defer terraform.Destroy(t, terraformOptions)
+
+	plan := terraform.InitAndPlanAndShowWithStruct(t, terraformOptions)
+	statements := plannedDeployerPolicy(t, plan)
+
+	assert.NotContains(t, statements, "KmsExternalKeyUse",
+		"external key permissions should require kms_key_arn")
+
+	// Any KMS action other than a read must be tied to the module's own key by its Name tag
+	keyName := namePrefix + "-cmk"
+	for sid, s := range statements {
+		for _, action := range stringList(t, s.Action) {
+			if !strings.HasPrefix(action, "kms:") {
+				continue
+			}
+			name := strings.TrimPrefix(action, "kms:")
+			if strings.HasPrefix(name, "Describe") || strings.HasPrefix(name, "Get") || strings.HasPrefix(name, "List") {
+				continue
+			}
+			if sid == "KmsAliasManagement" {
+				assert.Equal(t,
+					[]string{"arn:aws:kms:" + deployerTestRegion + ":" + deployerTestAccountID + ":alias/" + keyName},
+					stringList(t, s.Resource), "alias permissions should be scoped to the module's alias")
+				continue
+			}
+			tagged := s.Condition["StringEquals"]["aws:ResourceTag/Name"] == keyName ||
+				s.Condition["StringEquals"]["aws:RequestTag/Name"] == keyName
+			assert.True(t, tagged, "statement %s grants %s without a Name = %s tag condition", sid, action, keyName)
+		}
+	}
+}
+
+func TestDeployerExternalKmsKeyGrantsUse(t *testing.T) {
+	t.Parallel()
+	keyArn := "arn:aws:kms:" + deployerTestRegion + ":" + deployerTestAccountID +
+		":key/11111111-2222-3333-4444-555555555555"
+
+	terraformOptions := getDeployerOptions(t, map[string]interface{}{
+		"name_prefix": generateTestNamePrefix("dep"),
+		"kms_key_arn": keyArn,
+	})
+	defer terraform.Destroy(t, terraformOptions)
+
+	plan := terraform.InitAndPlanAndShowWithStruct(t, terraformOptions)
+	statements := plannedDeployerPolicy(t, plan)
+
+	external, ok := statements["KmsExternalKeyUse"]
+	require.True(t, ok, "expected KmsExternalKeyUse statement when kms_key_arn is set")
+	assert.Equal(t, []string{keyArn}, stringList(t, external.Resource),
+		"external key permissions should be scoped to kms_key_arn only")
 }
 
 func TestDeployerAttachesPolicyToRole(t *testing.T) {

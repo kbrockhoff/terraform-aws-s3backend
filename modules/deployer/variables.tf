@@ -52,3 +52,14 @@ variable "backward_compatibility_enabled" {
   type        = bool
   default     = false
 }
+
+variable "kms_key_arn" {
+  description = "ARN of the existing KMS key passed to the parent module as encryption_config.kms_key_id when it does not create its own key. Leave empty when the parent module creates the key."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.kms_key_arn == "" || can(regex("^arn:[a-z-]+:kms:[a-z0-9-]+:[0-9]{12}:key/.+$", var.kms_key_arn))
+    error_message = "The kms_key_arn value must be empty or a KMS key ARN."
+  }
+}

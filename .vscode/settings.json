@@ -6,5 +6,5 @@
   ],
   "google.gemini.mcp.configurationFile": "${workspaceFolder}/.agents/mcp.json",
   "google.gemini.systemInstructionFile": "${workspaceFolder}/.agents/agents.md",
-  "opencode.rules.path": "./.agents/instructions/sub-agents/opencode-rules.md"
+  "opencode.rules.path": "./AGENTS.md"
 }
