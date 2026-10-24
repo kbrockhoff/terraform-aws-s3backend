@@ -18,8 +18,9 @@ func TestMain(m *testing.M) {
 }
 
 // copyExampleToTemp copies the repo's Terraform sources to a per-test temp dir and returns the example
-// path within it, so tests sharing an example can run in parallel without racing on .terraform or local
-// state. The root module is copied too because examples reference it via a relative source.
+// (or test/fixtures) path within it, so tests sharing a configuration can run in parallel without racing
+// on .terraform or local state. The modules are copied too because configurations reference them via
+// relative sources.
 func copyExampleToTemp(t *testing.T, examplePath string) string {
 	t.Helper()
 	srcRoot := ".."
@@ -29,8 +30,8 @@ func copyExampleToTemp(t *testing.T, examplePath string) string {
 		if err != nil {
 			return err
 		}
-		// Skip hidden dirs (.git, .terraform) and the Go test dir
-		if d.IsDir() && path != srcRoot && (strings.HasPrefix(d.Name(), ".") || d.Name() == "test") {
+		// Skip hidden dirs (.git, .terraform, vendored agent skills); only Terraform files are copied
+		if d.IsDir() && path != srcRoot && strings.HasPrefix(d.Name(), ".") {
 			return filepath.SkipDir
 		}
 		if d.IsDir() || !isTerraformSource(d.Name()) {
