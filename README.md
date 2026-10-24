@@ -194,6 +194,7 @@ module "custom_resources" {
   # Specify all individual configuration values
   # when environment_type is "None"
 }
+```
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
